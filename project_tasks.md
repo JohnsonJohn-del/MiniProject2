@@ -63,3 +63,30 @@
 - [x] Add demo mode indicator for clearer presentation behavior
 - [x] Refine page transition smoothness and motion orchestration quality
 - [x] Simplify developer_requirements.md to essential-only inputs
+
+## Phase 10 - Supabase Auth Migration & Backend Connectivity
+- [x] Fix frontend env variable naming (VITE_SUPABASE_ANON_KEY)
+- [x] Migrate AuthContext from custom JWT to Supabase Auth
+- [x] Update API client to use Supabase session tokens
+- [x] Update backend requireAuth middleware to verify Supabase access tokens
+- [x] Create confirmed demo users in Supabase Auth (admin@demo.com, client@demo.com)
+- [x] Set up local Docker PostgreSQL database
+- [x] Run SQL schema to create all required tables
+- [x] Start backend with demo user seeding
+
+## Phase 11 - Skills System & Development Environment
+- [x] Install 5 core skills (supabase-postgres, senior-architect, ui-design, framer-motion, debugger)
+- [x] Create skills_status.md with installation verification
+- [x] Create project_rules.md with persistent engineering behavior system
+- [x] Create .opencode-rules for autoloaded project rules
+- [x] Create development_environment.md with full stack documentation
+- [x] Verify .gitignore covers .env files (secrets protection)
+- [ ] Reinstall api-architect skill (timed out)
+- [ ] Reinstall git-workflow-manager skill (private repo, need access)
+
+## Next Up - Phase 12
+- [ ] Redesign /pages route into premium SaaS workspace launcher
+- [ ] Implement ingredient CRUD frontend integration
+- [ ] Implement recipe CRUD frontend integration
+- [ ] Implement operational costing engine frontend integration
+- [ ] Test full auth flow end-to-end (register, login, demo, logout, protected routes)
