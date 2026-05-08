@@ -27,10 +27,10 @@
 - [x] Build subscription plan page with current usage visibility
 
 ## Phase 5 - AI Pricing Advisor
-- [ ] Add AI abstraction service with OpenAI integration placeholder
-- [ ] Implement mocked AI fallback when API key is unavailable
-- [ ] Build pricing advisor UI with recommendation cards and warnings
-- [ ] Store and display AI usage logs
+- [x] Add AI abstraction service with OpenAI integration placeholder
+- [x] Implement mocked AI fallback when API key is unavailable
+- [x] Build pricing advisor UI with recommendation cards and warnings
+- [x] Store and display AI usage logs
 
 ## Phase 6 - Analytics Dashboard
 - [ ] Implement client analytics endpoints (margin, profitability, cost impact)

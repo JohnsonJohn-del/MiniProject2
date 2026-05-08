@@ -12,6 +12,7 @@ import operationalExpenseRoutes from "./routes/operationalExpenseRoutes.js";
 import menuItemRoutes from "./routes/menuItemRoutes.js";
 import costingRoutes from "./routes/costingRoutes.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api/operational-expenses", operationalExpenseRoutes);
 app.use("/api/menu-items", menuItemRoutes);
 app.use("/api/costing", costingRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/ai", aiRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

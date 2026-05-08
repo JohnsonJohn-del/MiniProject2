@@ -10,5 +10,7 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
   adminEmail: process.env.ADMIN_EMAIL,
-  adminPassword: process.env.ADMIN_PASSWORD
+  adminPassword: process.env.ADMIN_PASSWORD,
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModel: process.env.OPENAI_MODEL || "gpt-4o-mini"
 };
