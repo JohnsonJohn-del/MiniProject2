@@ -9,10 +9,10 @@
 - [x] Add environment variable templates and startup documentation
 
 ## Phase 2 - Ingredient Management and Recipe Builder
-- [ ] Implement vendor CRUD APIs with multi-tenant ownership
-- [ ] Implement ingredient CRUD APIs with user-level data isolation
-- [ ] Implement recipe CRUD APIs and recipe ingredient mapping
-- [ ] Build client ingredients and recipes management pages
+- [x] Implement vendor CRUD APIs with multi-tenant ownership
+- [x] Implement ingredient CRUD APIs with user-level data isolation
+- [x] Implement recipe CRUD APIs and recipe ingredient mapping
+- [x] Build client ingredients and recipes management pages
 
 ## Phase 3 - Smart Costing Engine and Operational Costing
 - [ ] Implement operational expenses API per client
