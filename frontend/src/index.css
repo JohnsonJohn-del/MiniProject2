@@ -1,0 +1,22 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #0f172a;
+  background-color: #f6f8fc;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+.app-shell {
+  @apply min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.14),transparent_50%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)];
+}
+
+.glass-card {
+  @apply rounded-2xl border border-slate-200/80 bg-white/90 shadow-soft backdrop-blur;
+}
