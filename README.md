@@ -46,3 +46,23 @@ npm run dev
 - `client`: restaurant user
 
 Admin seed is performed at server start when `ADMIN_EMAIL` and `ADMIN_PASSWORD` are configured.
+
+## Demo Access (Development Only)
+
+Demo accounts are seeded automatically on backend start:
+
+- Client demo: `client@demo.com` / `123456`
+- Admin demo: `admin@demo.com` / `123456`
+
+Use `/login` or `/pages` for one-click demo access buttons.
+
+## Region-Based Pricing UX
+
+Frontend auto-detects region from browser locale and supports:
+
+- India: INR (`₹`)
+- United States: USD (`$`)
+- Europe: EUR (`€`)
+- United Kingdom: GBP (`£`)
+
+Users can switch region manually via the currency selector, and preference is persisted in localStorage.
