@@ -15,10 +15,10 @@
 - [x] Build client ingredients and recipes management pages
 
 ## Phase 3 - Smart Costing Engine and Operational Costing
-- [ ] Implement operational expenses API per client
-- [ ] Build costing engine service (ingredient + utility + salary allocation)
-- [ ] Add menu item pricing model with profit margin calculations
-- [ ] Expose costing endpoints for frontend usage
+- [x] Implement operational expenses API per client
+- [x] Build costing engine service (ingredient + utility + salary allocation)
+- [x] Add menu item pricing model with profit margin calculations
+- [x] Expose costing endpoints for frontend usage
 
 ## Phase 4 - Subscription Feature Gating
 - [ ] Define FREE, PRO, PREMIUM usage limits and feature matrix

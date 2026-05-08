@@ -1,5 +1,16 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { BarChart3, ChefHat, LogOut, Menu, Sparkles, Wheat } from "lucide-react";
+import {
+  BarChart3,
+  ChefHat,
+  CreditCard,
+  LogOut,
+  Menu,
+  Sparkles,
+  Wallet,
+  Wheat,
+  Users,
+  Bot
+} from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import Logo from "../components/ui/Logo";
@@ -8,12 +19,19 @@ const clientLinks = [
   { to: "/app", label: "Dashboard", icon: BarChart3 },
   { to: "/app/ingredients", label: "Ingredients", icon: Wheat },
   { to: "/app/recipes", label: "Recipes", icon: ChefHat },
-  { to: "/app/pricing-advisor", label: "Pricing Advisor", icon: Sparkles }
+  { to: "/app/operational-costs", label: "Operational Costs", icon: Wallet },
+  { to: "/app/pricing-advisor", label: "Pricing Advisor", icon: Sparkles },
+  { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/app/subscription", label: "Subscription", icon: CreditCard }
 ];
 
 const adminLinks = [
   { to: "/admin", label: "Dashboard", icon: BarChart3 },
-  { to: "/admin/users", label: "Users", icon: Wheat },
+  { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { to: "/admin/recipes", label: "Recipes", icon: ChefHat },
+  { to: "/admin/ingredients", label: "Ingredients", icon: Wheat },
+  { to: "/admin/ai-usage", label: "AI Usage", icon: Bot },
   { to: "/admin/reports", label: "Reports", icon: Sparkles }
 ];
 
