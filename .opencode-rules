@@ -8,15 +8,23 @@ Always follow these project rules:
 4. **Commit frequently** — after each logical completion point with clear messages.
 5. **Update project_tasks.md continuously** — it is the source of truth for tracking progress.
 
-## Installed Skills
+## Installed Skills (13 total)
 
 The following skills are installed in `.agents/skills/` and should be loaded for relevant tasks:
 
 - `supabase-postgres-best-practices` — PostgreSQL schema, queries, RLS
+- `supabase` — general Supabase integration, auth, storage, realtime
 - `senior-architect` — system architecture, clean patterns
 - `ui-design` — premium UI/UX, component architecture
+- `ui-ux-pro-max` — advanced UI/UX patterns, premium components
+- `saas-ui-master` — SaaS dashboard patterns, launcher UI, workspace design
+- `modern-web-design` — modern web design patterns, layout systems
 - `framer-motion-animator` — animation patterns
+- `front-end-developer` — frontend development best practices
 - `debugger` — debugging strategies
+- `improve-codebase-architecture` — codebase architecture improvement
+- `find-skills` — skill discovery and search
+- `skill-creator` — create custom project-specific skills
 
 ## Core Architecture
 
