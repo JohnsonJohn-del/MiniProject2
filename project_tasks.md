@@ -33,10 +33,10 @@
 - [x] Store and display AI usage logs
 
 ## Phase 6 - Analytics Dashboard
-- [ ] Implement client analytics endpoints (margin, profitability, cost impact)
-- [ ] Implement admin analytics endpoints (users, plans, AI stats)
-- [ ] Build modern Recharts analytics views for client and admin
-- [ ] Add AI report summary widgets
+- [x] Implement client analytics endpoints (margin, profitability, cost impact)
+- [x] Implement admin analytics endpoints (users, plans, AI stats)
+- [x] Build modern Recharts analytics views for client and admin
+- [x] Add AI report summary widgets
 
 ## Phase 7 - Polish, Responsive QA, and Production Readiness
 - [ ] Refine responsive behavior for sidebar, tables, and cards
