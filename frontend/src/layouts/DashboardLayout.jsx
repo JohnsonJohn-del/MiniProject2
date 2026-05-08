@@ -43,8 +43,16 @@ export default function DashboardLayout() {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="mx-auto flex min-h-screen max-w-[1400px]">
+        {open ? (
+          <button
+            type="button"
+            className="fixed inset-0 z-10 bg-slate-900/30 md:hidden"
+            onClick={() => setOpen(false)}
+            aria-label="Close navigation"
+          />
+        ) : null}
         <aside
-          className={`fixed z-20 h-full w-72 border-r border-slate-200 bg-white p-5 transition md:static md:translate-x-0 ${
+          className={`fixed z-20 h-full w-72 border-r border-slate-200 bg-white p-5 transition duration-200 md:static md:translate-x-0 ${
             open ? "translate-x-0" : "-translate-x-full"
           }`}
         >

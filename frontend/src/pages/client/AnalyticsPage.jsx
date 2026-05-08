@@ -13,12 +13,14 @@ import {
 } from "recharts";
 import api from "../../services/api";
 import PageHeader from "../../components/ui/PageHeader";
+import { SkeletonCard } from "../../components/ui/SkeletonCard";
 
 const colors = ["#0f172a", "#334155", "#64748b", "#94a3b8", "#cbd5e1", "#3b82f6", "#1d4ed8", "#93c5fd"];
 
 export default function AnalyticsPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -27,6 +29,8 @@ export default function AnalyticsPage() {
         setData(response.data);
       } catch (err) {
         setError(err.response?.data?.message || "Unable to load analytics");
+      } finally {
+        setLoading(false);
       }
     };
     load();
@@ -54,53 +58,64 @@ export default function AnalyticsPage() {
 
       {error ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <article className="glass-card p-6">
-          <h3 className="font-bold text-slate-900">Dish Margin Distribution</h3>
-          <div className="mt-5 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={profitabilityData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="margin" radius={[8, 8, 0, 0]}>
-                  {profitabilityData.map((_, index) => (
-                    <Cell key={index} fill={colors[index % colors.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </article>
+      {loading ? (
+        <section className="grid gap-6 xl:grid-cols-2">
+          <SkeletonCard className="h-80" />
+          <SkeletonCard className="h-80" />
+        </section>
+      ) : null}
 
-        <article className="glass-card p-6">
-          <h3 className="font-bold text-slate-900">Ingredient Cost Impact</h3>
-          <div className="mt-5 h-80">
-            {ingredientCostData.length === 0 ? (
-              <div className="grid h-full place-items-center text-sm text-slate-500">
-                Upgrade to Premium to view full ingredient impact analytics.
+      {!loading ? (
+        <>
+          <section className="grid gap-6 xl:grid-cols-2">
+            <article className="glass-card p-6">
+              <h3 className="font-bold text-slate-900">Dish Margin Distribution</h3>
+              <div className="mt-5 h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={profitabilityData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Bar dataKey="margin" radius={[8, 8, 0, 0]}>
+                      {profitabilityData.map((_, index) => (
+                        <Cell key={index} fill={colors[index % colors.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={ingredientCostData} dataKey="value" nameKey="name" outerRadius={110} innerRadius={60}>
-                    {ingredientCostData.map((_, index) => (
-                      <Cell key={index} fill={colors[index % colors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </article>
-      </section>
+            </article>
 
-      <section className="glass-card p-7">
-        <h3 className="font-bold text-slate-900">AI Executive Insight</h3>
-        <p className="mt-3 text-sm text-slate-600">{data?.aiReportSummary || "No report available yet."}</p>
-      </section>
+            <article className="glass-card p-6">
+              <h3 className="font-bold text-slate-900">Ingredient Cost Impact</h3>
+              <div className="mt-5 h-80">
+                {ingredientCostData.length === 0 ? (
+                  <div className="grid h-full place-items-center text-sm text-slate-500">
+                    Upgrade to Premium to view full ingredient impact analytics.
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={ingredientCostData} dataKey="value" nameKey="name" outerRadius={110} innerRadius={60}>
+                        {ingredientCostData.map((_, index) => (
+                          <Cell key={index} fill={colors[index % colors.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </article>
+          </section>
+
+          <section className="glass-card p-7">
+            <h3 className="font-bold text-slate-900">AI Executive Insight</h3>
+            <p className="mt-3 text-sm text-slate-600">{data?.aiReportSummary || "No report available yet."}</p>
+          </section>
+        </>
+      ) : null}
     </div>
   );
 }

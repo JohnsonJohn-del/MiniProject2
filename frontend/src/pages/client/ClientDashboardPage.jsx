@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { SkeletonCard } from "../../components/ui/SkeletonCard";
 
 export default function ClientDashboardPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -12,6 +14,8 @@ export default function ClientDashboardPage() {
         setData(response.data);
       } catch (err) {
         setError(err.response?.data?.message || "Unable to load dashboard metrics");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -30,12 +34,14 @@ export default function ClientDashboardPage() {
       {error ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((card) => (
-          <article key={card.label} className="glass-card p-5">
-            <p className="text-sm text-slate-500">{card.label}</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">{card.value}</p>
-          </article>
-        ))}
+        {loading
+          ? Array.from({ length: 4 }).map((_, index) => <SkeletonCard key={index} className="h-28" />)
+          : stats.map((card) => (
+              <article key={card.label} className="glass-card p-5">
+                <p className="text-sm text-slate-500">{card.label}</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">{card.value}</p>
+              </article>
+            ))}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
