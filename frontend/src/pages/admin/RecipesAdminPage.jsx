@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import PageHeader from "../../components/ui/PageHeader";
+import { useCurrency } from "../../hooks/useCurrency";
 
 export default function RecipesAdminPage() {
+  const { formatUsd } = useCurrency();
   const [records, setRecords] = useState([]);
   const [error, setError] = useState("");
 
@@ -39,7 +41,7 @@ export default function RecipesAdminPage() {
                 <tr key={record.id} className="border-t border-slate-100">
                   <td className="px-4 py-3 font-semibold text-slate-900">{record.recipe_name}</td>
                   <td className="px-4 py-3 text-xs text-slate-500">{record.user_id}</td>
-                  <td className="px-4 py-3 text-slate-700">${Number(record.total_cost).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-slate-700">{formatUsd(record.total_cost)}</td>
                   <td className="px-4 py-3 text-slate-500">{new Date(record.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}

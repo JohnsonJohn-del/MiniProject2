@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import { useCurrency } from "../../hooks/useCurrency";
 
 const reveal = {
   hidden: { opacity: 0, y: 26 },
@@ -60,6 +61,7 @@ const workflow = [
 ];
 
 export default function LandingPage() {
+  const { formatUsd } = useCurrency();
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
   const cardY = useTransform(scrollYProgress, [0, 1], [55, -40]);
@@ -148,11 +150,11 @@ export default function LandingPage() {
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-3">
                   <p className="text-[11px] uppercase tracking-wide text-slate-500">Dish Cost</p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">$5.42</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{formatUsd(5.42)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-3">
                   <p className="text-[11px] uppercase tracking-wide text-slate-500">Ideal Price</p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">$15.90</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{formatUsd(15.9)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-3">
                   <p className="text-[11px] uppercase tracking-wide text-slate-500">Projected Margin</p>
@@ -256,14 +258,14 @@ export default function LandingPage() {
               <h3 className="mt-3 text-2xl font-bold text-slate-900">Profitability Snapshot</h3>
               <div className="mt-6 space-y-3">
                 {[
-                  ["Butter Chicken", "$17.00", "63.8%"],
-                  ["Veg Biryani", "$11.50", "58.2%"],
-                  ["Mutton Curry", "$20.00", "47.9%"],
-                  ["Paneer Wrap", "$8.20", "34.4%"]
+                  ["Butter Chicken", 17, "63.8%"],
+                  ["Veg Biryani", 11.5, "58.2%"],
+                  ["Mutton Curry", 20, "47.9%"],
+                  ["Paneer Wrap", 8.2, "34.4%"]
                 ].map(([dish, price, margin]) => (
                   <div key={dish} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
                     <p className="text-sm font-semibold text-slate-900">{dish}</p>
-                    <p className="text-sm text-slate-500">{price}</p>
+                    <p className="text-sm text-slate-500">{formatUsd(price)}</p>
                     <p className="rounded-lg bg-slate-900 px-2 py-1 text-xs font-semibold text-white">{margin}</p>
                   </div>
                 ))}

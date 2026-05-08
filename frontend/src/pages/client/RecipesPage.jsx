@@ -5,10 +5,12 @@ import PageHeader from "../../components/ui/PageHeader";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import EmptyState from "../../components/ui/EmptyState";
 import TextInput from "../../components/ui/TextInput";
+import { useCurrency } from "../../hooks/useCurrency";
 
 const initialItem = { ingredient_id: "", quantity: "" };
 
 export default function RecipesPage() {
+  const { formatUsd } = useCurrency();
   const [recipes, setRecipes] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
@@ -209,7 +211,7 @@ export default function RecipesPage() {
                     <tr key={recipe.id} className="border-t border-slate-100">
                       <td className="px-6 py-3 font-medium text-slate-900">{recipe.recipe_name}</td>
                       <td className="px-6 py-3 text-slate-600">{recipe.ingredient_count}</td>
-                      <td className="px-6 py-3 text-slate-600">${Number(recipe.total_cost).toFixed(2)}</td>
+                      <td className="px-6 py-3 text-slate-600">{formatUsd(recipe.total_cost)}</td>
                       <td className="px-6 py-3">
                         <div className="flex justify-end gap-2">
                           <button
@@ -251,7 +253,7 @@ export default function RecipesPage() {
             <div className="mt-4 space-y-4">
               <div>
                 <p className="text-sm font-semibold text-slate-900">{recipeDetail.recipe_name}</p>
-                <p className="text-sm text-slate-600">Total cost: ${Number(recipeDetail.total_cost).toFixed(2)}</p>
+                <p className="text-sm text-slate-600">Total cost: {formatUsd(recipeDetail.total_cost)}</p>
               </div>
               <ul className="space-y-3">
                 {recipeDetail.items.map((item) => (
@@ -260,7 +262,7 @@ export default function RecipesPage() {
                       {ingredientLookup[item.ingredient_id] || item.ingredient_name}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Qty {Number(item.quantity).toFixed(3)} {item.unit} at ${Number(item.price_per_unit).toFixed(2)}/unit
+                      Qty {Number(item.quantity).toFixed(3)} {item.unit} at {formatUsd(item.price_per_unit)}/unit
                     </p>
                   </li>
                 ))}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import api from "../../services/api";
 import PageHeader from "../../components/ui/PageHeader";
+import { useCurrency } from "../../hooks/useCurrency";
 
 const planLabels = {
   free: "Free",
@@ -10,6 +11,7 @@ const planLabels = {
 };
 
 export default function SubscriptionPage() {
+  const { region, formatNative } = useCurrency();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
@@ -41,6 +43,9 @@ export default function SubscriptionPage() {
           <article className="glass-card p-6">
             <p className="text-sm text-slate-500">Current plan</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">{planLabels[data.plan] || data.plan}</p>
+            <p className="mt-1 text-sm font-semibold text-brand-700">
+              {formatNative(region.planPrices[data.plan] || 0)} / month
+            </p>
             <p className="mt-2 text-sm text-slate-600">Upgrade to unlock more recipes, AI requests, and analytics.</p>
           </article>
 

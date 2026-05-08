@@ -1,4 +1,5 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   BarChart3,
   ChefHat,
@@ -14,6 +15,8 @@ import {
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import Logo from "../components/ui/Logo";
+import CurrencySelector from "../components/ui/CurrencySelector";
+import DemoModeChip from "../components/ui/DemoModeChip";
 
 const clientLinks = [
   { to: "/app", label: "Dashboard", icon: BarChart3 },
@@ -39,6 +42,7 @@ export default function DashboardLayout() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
   const links = user?.role === "admin" ? adminLinks : clientLinks;
+  const location = useLocation();
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -66,7 +70,7 @@ export default function DashboardLayout() {
                 to={to}
                 end
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition duration-200 ${
+                  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition duration-300 ${
                     isActive
                       ? "bg-slate-900 text-white"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -97,15 +101,31 @@ export default function DashboardLayout() {
             >
               <Menu size={18} />
             </button>
-            <p className="text-sm font-semibold text-slate-700">
-              {user?.role === "admin" ? "Admin Panel" : "Client Workspace"}
-            </p>
-            <Link to="/pricing" className="text-sm text-slate-600 hover:text-slate-900">
-              Plans
-            </Link>
+            <div className="hidden items-center gap-3 md:flex">
+              <p className="text-sm font-semibold text-slate-700">
+                {user?.role === "admin" ? "Admin Panel" : "Client Workspace"}
+              </p>
+              <DemoModeChip />
+            </div>
+            <div className="flex items-center gap-2">
+              <CurrencySelector compact />
+              <Link to="/pricing" className="text-sm text-slate-600 hover:text-slate-900">
+                Plans
+              </Link>
+            </div>
           </header>
           <main className="flex-1 p-4 md:p-8">
-            <Outlet />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 10, scale: 0.996 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.998 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </main>
         </div>
       </div>

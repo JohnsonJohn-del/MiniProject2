@@ -5,6 +5,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import TextInput from "../../components/ui/TextInput";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import EmptyState from "../../components/ui/EmptyState";
+import { useCurrency } from "../../hooks/useCurrency";
 
 const vendorInitialForm = { vendor_name: "", contact: "" };
 const ingredientInitialForm = {
@@ -15,6 +16,7 @@ const ingredientInitialForm = {
 };
 
 export default function IngredientsPage() {
+  const { formatUsd, region } = useCurrency();
   const [vendors, setVendors] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [vendorForm, setVendorForm] = useState(vendorInitialForm);
@@ -111,6 +113,7 @@ export default function IngredientsPage() {
         title="Ingredients & Vendors"
         description="Manage supplier data and per-unit ingredient pricing for precise costing."
       />
+      <p className="-mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">Price fields are displayed in {region.currency}</p>
 
       {error ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
 
@@ -277,7 +280,7 @@ export default function IngredientsPage() {
                     <tr key={ingredient.id} className="border-t border-slate-100">
                       <td className="px-6 py-3 font-medium text-slate-900">{ingredient.ingredient_name}</td>
                       <td className="px-6 py-3 text-slate-600">{ingredient.unit}</td>
-                      <td className="px-6 py-3 text-slate-600">${Number(ingredient.price_per_unit).toFixed(2)}</td>
+                      <td className="px-6 py-3 text-slate-600">{formatUsd(ingredient.price_per_unit)}</td>
                       <td className="px-6 py-3 text-slate-600">{vendorLookup[ingredient.vendor_id] || "-"}</td>
                       <td className="px-6 py-3">
                         <div className="flex justify-end gap-2">

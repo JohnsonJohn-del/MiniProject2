@@ -5,8 +5,10 @@ import PageHeader from "../../components/ui/PageHeader";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import TextInput from "../../components/ui/TextInput";
 import EmptyState from "../../components/ui/EmptyState";
+import { useCurrency } from "../../hooks/useCurrency";
 
 export default function PricingAdvisorPage() {
+  const { formatUsd } = useCurrency();
   const [recipes, setRecipes] = useState([]);
   const [logs, setLogs] = useState([]);
   const [form, setForm] = useState({ recipe_id: "", current_price: "", month: new Date().toISOString().slice(0, 7) });
@@ -125,11 +127,11 @@ export default function PricingAdvisorPage() {
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 p-3">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Final Dish Cost</p>
-                  <p className="mt-1 text-xl font-bold text-slate-900">${Number(result.costing.finalDishCost).toFixed(2)}</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">{formatUsd(result.costing.finalDishCost)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 p-3">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Suggested Price</p>
-                  <p className="mt-1 text-xl font-bold text-slate-900">${Number(result.recommendation.idealSellingPrice).toFixed(2)}</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">{formatUsd(result.recommendation.idealSellingPrice)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 p-3">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Current Margin</p>
@@ -138,9 +140,7 @@ export default function PricingAdvisorPage() {
               </div>
 
               <p className="mt-4 text-sm text-slate-600">
-                Recommended range: ${Number(result.recommendation.suggestedRange.min).toFixed(2)} - ${Number(
-                  result.recommendation.suggestedRange.max
-                ).toFixed(2)}
+                Recommended range: {formatUsd(result.recommendation.suggestedRange.min)} - {formatUsd(result.recommendation.suggestedRange.max)}
               </p>
             </article>
 

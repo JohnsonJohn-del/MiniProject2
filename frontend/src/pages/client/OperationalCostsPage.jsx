@@ -4,6 +4,7 @@ import api from "../../services/api";
 import PageHeader from "../../components/ui/PageHeader";
 import TextInput from "../../components/ui/TextInput";
 import PrimaryButton from "../../components/ui/PrimaryButton";
+import { useCurrency } from "../../hooks/useCurrency";
 
 const initialExpense = {
   month: "",
@@ -22,6 +23,7 @@ function getCurrentMonth() {
 }
 
 export default function OperationalCostsPage() {
+  const { formatUsd, region } = useCurrency();
   const [expenseForm, setExpenseForm] = useState({ ...initialExpense, month: getCurrentMonth() });
   const [menuForm, setMenuForm] = useState(menuInitial);
   const [expenses, setExpenses] = useState([]);
@@ -113,6 +115,7 @@ export default function OperationalCostsPage() {
       <section className="grid gap-6 xl:grid-cols-2">
         <form onSubmit={saveExpense} className="glass-card space-y-4 p-6">
           <h2 className="text-lg font-bold text-slate-900">Monthly Operational Expenses</h2>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Input values in {region.currency}</p>
           <label className="block space-y-2">
             <span className="text-sm font-medium text-slate-700">Month</span>
             <input
@@ -195,10 +198,10 @@ export default function OperationalCostsPage() {
           {costingPreview ? (
             <div className="rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800">
               <p className="font-semibold">Costing Preview ({costingPreview.month})</p>
-              <p className="mt-1">Ingredient Cost: ${Number(costingPreview.ingredientCost).toFixed(2)}</p>
-              <p>Operational Allocation: ${Number(costingPreview.operationalAllocation).toFixed(2)}</p>
-              <p>Salary Allocation: ${Number(costingPreview.salaryAllocation).toFixed(2)}</p>
-              <p className="mt-1 font-semibold">Final Dish Cost: ${Number(costingPreview.finalDishCost).toFixed(2)}</p>
+              <p className="mt-1">Ingredient Cost: {formatUsd(costingPreview.ingredientCost)}</p>
+              <p>Operational Allocation: {formatUsd(costingPreview.operationalAllocation)}</p>
+              <p>Salary Allocation: {formatUsd(costingPreview.salaryAllocation)}</p>
+              <p className="mt-1 font-semibold">Final Dish Cost: {formatUsd(costingPreview.finalDishCost)}</p>
             </div>
           ) : null}
         </form>
@@ -224,9 +227,9 @@ export default function OperationalCostsPage() {
                 {expenses.map((expense) => (
                   <tr key={expense.id} className="border-t border-slate-100">
                     <td className="px-6 py-3 font-medium text-slate-900">{expense.month}</td>
-                    <td className="px-6 py-3 text-slate-600">${Number(expense.electricity_bill).toFixed(2)}</td>
-                    <td className="px-6 py-3 text-slate-600">${Number(expense.gas_bill).toFixed(2)}</td>
-                    <td className="px-6 py-3 text-slate-600">${Number(expense.salary_cost).toFixed(2)}</td>
+                    <td className="px-6 py-3 text-slate-600">{formatUsd(expense.electricity_bill)}</td>
+                    <td className="px-6 py-3 text-slate-600">{formatUsd(expense.gas_bill)}</td>
+                    <td className="px-6 py-3 text-slate-600">{formatUsd(expense.salary_cost)}</td>
                     <td className="px-6 py-3 text-right">
                       <button
                         type="button"
@@ -261,7 +264,7 @@ export default function OperationalCostsPage() {
                 {menuItems.map((item) => (
                   <tr key={item.id} className="border-t border-slate-100">
                     <td className="px-6 py-3 font-medium text-slate-900">{recipeLookup[item.recipe_id] || "-"}</td>
-                    <td className="px-6 py-3 text-slate-600">${Number(item.selling_price).toFixed(2)}</td>
+                    <td className="px-6 py-3 text-slate-600">{formatUsd(item.selling_price)}</td>
                     <td className="px-6 py-3 text-slate-600">{Number(item.profit_margin).toFixed(2)}%</td>
                     <td className="px-6 py-3 text-right">
                       <button

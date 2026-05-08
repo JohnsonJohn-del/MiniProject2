@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { SkeletonCard } from "../../components/ui/SkeletonCard";
+import { useCurrency } from "../../hooks/useCurrency";
 
 export default function ClientDashboardPage() {
+  const { formatUsd } = useCurrency();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ export default function ClientDashboardPage() {
     { label: "Total Recipes", value: data?.overview?.totalRecipes ?? 0 },
     { label: "Avg Margin", value: `${Number(data?.overview?.avgMargin || 0).toFixed(2)}%` },
     { label: "Menu Items", value: data?.overview?.menuItems ?? 0 },
-    { label: "Avg Recipe Cost", value: `$${Number(data?.overview?.avgRecipeCost || 0).toFixed(2)}` }
+    { label: "Avg Recipe Cost", value: formatUsd(data?.overview?.avgRecipeCost || 0) }
   ];
 
   return (
