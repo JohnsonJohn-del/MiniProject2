@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
+import { requirePlanFeature } from "../middleware/subscriptionMiddleware.js";
 import {
   createMenuItem,
   deleteMenuItem,
@@ -11,6 +12,7 @@ import {
 const router = Router();
 
 router.use(asyncHandler(requireAuth));
+router.use(asyncHandler(requirePlanFeature("operationalCosting")));
 
 router.get("/", asyncHandler(listMenuItems));
 router.post("/", asyncHandler(createMenuItem));

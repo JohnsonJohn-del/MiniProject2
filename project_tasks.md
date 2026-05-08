@@ -21,10 +21,10 @@
 - [x] Expose costing endpoints for frontend usage
 
 ## Phase 4 - Subscription Feature Gating
-- [ ] Define FREE, PRO, PREMIUM usage limits and feature matrix
-- [ ] Implement backend middleware to enforce recipe and AI limits
-- [ ] Track daily AI usage and recipe counts per client
-- [ ] Build subscription plan page with current usage visibility
+- [x] Define FREE, PRO, PREMIUM usage limits and feature matrix
+- [x] Implement backend middleware to enforce recipe and AI limits
+- [x] Track daily AI usage and recipe counts per client
+- [x] Build subscription plan page with current usage visibility
 
 ## Phase 5 - AI Pricing Advisor
 - [ ] Add AI abstraction service with OpenAI integration placeholder
