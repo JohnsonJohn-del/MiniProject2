@@ -66,7 +66,7 @@ export default function DashboardLayout() {
                 to={to}
                 end
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition duration-200 ${
                     isActive
                       ? "bg-slate-900 text-white"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -82,7 +82,7 @@ export default function DashboardLayout() {
           <button
             type="button"
             onClick={logout}
-            className="mt-8 flex w-full items-center gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            className="mt-8 flex w-full items-center gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition duration-200 hover:bg-slate-100"
           >
             <LogOut size={16} /> Sign out
           </button>
