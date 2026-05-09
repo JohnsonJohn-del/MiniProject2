@@ -400,4 +400,79 @@ Initialize monorepo structure with full-stack architecture.
 
 ---
 
+## 2026-05-09 18:00 — Session: Supabase Database Integration & Ingredient CRUD
+
+### Task
+Replace `pg` (PostgreSQL pool) with `@supabase/supabase-js` (REST API) for backend database operations. Implement end-to-end ingredient CRUD.
+
+### What Was Attempted
+1. Created `supabaseAdmin.js` — Supabase admin client using `service_role` key
+2. Added `SUPABASE_SERVICE_ROLE_KEY` to `.env` and `env.js`
+3. Updated `index.js` — Graceful pg failure handling; server starts without PostgreSQL
+4. Rewrote `authMiddleware.js` — Uses Supabase client for user lookup and auto-creation
+5. Rewrote `adminSeeder.js` — Uses Supabase client for seeding demo users
+6. Rewrote `ingredientController.js` — All CRUD operations via Supabase JS client
+7. Rewrote `vendorController.js` — All CRUD operations via Supabase JS client
+8. Tested full CRUD: create vendor → create ingredient → list → update → delete
+9. Tested auth protection: 401 for unauthenticated requests
+10. Tested multi-tenant isolation: admin sees all data, client sees own
+11. Started frontend dev server on port 5173
+
+### Result
+✅ **ALL CRUD TESTS PASSED**
+```
+--- CREATE VENDOR ---
+Status: 201 | Vendor: Test Supplier
+
+--- CREATE INGREDIENT ---
+Status: 201 | Ingredient: Test Tomato
+
+--- LIST INGREDIENTS ---
+Count: 1 | First: Test Tomato
+
+--- UPDATE INGREDIENT ---
+Status: 200 | Updated: Test Tomato Updated
+
+--- DELETE INGREDIENT ---
+Status: 200 | Message: Ingredient deleted
+
+--- DELETE VENDOR ---
+Status: 200 | Message: Vendor deleted
+
+--- AUTH PROTECTION ---
+Status: 401 | Message: Authentication required
+
+--- TENANT ISOLATION ---
+Admin sees 1 ingredients (can see client data: true)
+Client sees 1 ingredients
+```
+
+### Issues Encountered
+- **pg unavailable**: Backend started with pg pool connection failure (expected — Supabase DB is IPv6-only). The server gracefully continues using Supabase REST API.
+- **Supavisor still blocked**: `(ENOTFOUND) tenant/user postgres.qqfgolwjuqjvqcmcweua not found` — pooler add-on needs dashboard activation.
+- **Admin seeding skipped**: Since pg is unavailable, `seedAdminIfMissing` was skipped. Users are auto-created on first login via `authMiddleware.js`.
+
+### Architecture Change
+**Before**: All controllers used `query()` from `db.js` which called `pg.Pool.query()` — direct PostgreSQL connection.
+**After**: Infrastructure files (authMiddleware, adminSeeder) and specific controllers (ingredient, vendor) use `supabaseAdmin` from `supabaseAdmin.js` which calls Supabase REST API over HTTPS (works over IPv4).
+
+### Files Modified/Created
+- `backend/src/config/supabaseAdmin.js` — NEW
+- `backend/src/config/env.js` — Added `supabaseServiceRoleKey`
+- `backend/.env` — Added `SUPABASE_SERVICE_ROLE_KEY`
+- `backend/src/index.js` — Graceful pg failure handling
+- `backend/src/middleware/authMiddleware.js` — Rewritten to use supabaseAdmin
+- `backend/src/services/adminSeeder.js` — Rewritten to use supabaseAdmin
+- `backend/src/controllers/ingredientController.js` — Rewritten to use supabaseAdmin
+- `backend/src/controllers/vendorController.js` — Rewritten to use supabaseAdmin
+
+### Current Status
+✅ Ingredient CRUD complete and verified.
+🟡 Other controllers (recipes, costing, analytics, etc.) still use pg — will fail if called.
+
+### Next Planned Step
+Migrate remaining controllers to Supabase client, starting with recipes.
+
+---
+
 *Last updated: 2026-05-09*

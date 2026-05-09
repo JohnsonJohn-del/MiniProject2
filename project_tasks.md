@@ -74,55 +74,39 @@
 - [x] Start backend with demo user seeding
 
 ## Phase 11 - Skills System & Development Environment
-- [x] Install 13 skills (supabase-postgres, senior-architect, ui-design, framer-motion, debugger, saas-ui-master, ui-ux-pro-max, front-end-developer, supabase, modern-web-design, improve-codebase-architecture, find-skills, skill-creator)
-- [x] Create skills_status.md with installation verification
-- [x] Create project_rules.md with persistent engineering behavior system
-- [x] Create .opencode-rules for autoloaded project rules
-- [x] Create development_environment.md with full stack documentation
+- [x] Install 13 skills
+- [x] Create skills_status.md, project_rules.md, .opencode-rules, development_environment.md
 - [x] Verify .gitignore covers .env files (secrets protection)
 - [ ] Reinstall api-architect skill (timed out)
 - [ ] Reinstall git-workflow-manager skill (private repo, need access)
 
 ## Phase 12 - Premium UI Overhaul & Color Palette
-- [x] Redesign /pages route into premium SaaS workspace launcher
-- [x] Redesign LandingPage with gradient text hero, AI priceboard preview, scroll reveals, animated stats
-- [x] Upgrade PublicLayout with sticky glass header, mobile hamburger menu, currency/demo chips
-- [x] Upgrade DashboardLayout with premium sidebar, gradient nav icons, glass header, mobile slide-out
-- [x] Upgrade all 7 client pages with glassmorphism cards, framer-motion table animations, gradient KPI icons
-- [x] Upgrade all 3 admin pages with gradient stat cards, inline plan management, search/action buttons
-- [x] Add premium CSS utilities: glass-card-premium, text-gradient, glow-card, shimmer, gradient-border
-- [x] Add health endpoints: /api/health/db, /api/health/supabase
-- [x] Fix authMiddleware hardcoded values — now uses env config
-- [x] Improve api.js with 15s timeout and 401 auto-refresh
+- [x] Redesign all pages with glassmorphism, gradients, micro-animations
+- [x] Add premium CSS utilities, health endpoints
+- [x] Fix authMiddleware, improve api.js error handling
+- [x] Liquid glassmorphism effects with animated gradient blobs
+- [x] Change brand color to indigo-violet with warm amber accent
 
-## Phase 13 - Liquid Glassmorphism & New Palette
-- [x] Add liquid-glass class with animated gradient overlays
-- [x] Add liquid-blob floating SVG blobs with organic drift animation
-- [x] Add liquid-ambient dual-orb background
-- [x] Change brand color from blue (#3b82f6) to indigo-violet (#8b5cf6)
-- [x] Add accent color palette: warm amber/coral (#f97316 primary)
-- [x] Update tailwind config with shadow-glass, shadow-glass-lg
-- [x] Update PrimaryButton, Logo, and all components to new palette
-- [x] Commit and push both changesets
+## Phase 13 - Developer Collaboration System
+- [x] Create CONTRIBUTOR_LOG.md, DEVELOPMENT_JOURNAL.md, ARCHITECTURE_DECISIONS.md, HANDOVER_NOTES.md
+- [x] Update project_tasks.md with 15+ granular phases
 
-## Phase 14 - Developer Collaboration System
-- [x] Create CONTRIBUTOR_LOG.md with real contributor tracking
-- [x] Create DEVELOPMENT_JOURNAL.md with detailed engineering log
-- [x] Create ARCHITECTURE_DECISIONS.md with major project decisions
-- [x] Create HANDOVER_NOTES.md for team handover
-- [x] Update project_tasks.md with new phases
-
-## Phase 15 - Ingredient CRUD Integration (In Progress)
-- [ ] Run schema SQL in Supabase Dashboard SQL Editor
-- [ ] Create supabaseAdmin.js with service_role key
-- [ ] Rewrite ingredient controller to use Supabase JS client
-- [ ] Rewrite vendor controller to use Supabase JS client
-- [ ] Start backend and test CRUD end-to-end
-- [ ] Add loading states, empty states to ingredients page (UI already done)
-- [ ] Test with demo users (admin + client)
+## Phase 14 - Supabase Database Integration & Ingredient CRUD
+- [x] Run schema.sql in Supabase SQL Editor (all tables created)
+- [x] Create supabaseAdmin.js with service_role key for REST API access
+- [x] Rewrite db.js/index.js to handle pg failure gracefully
+- [x] Rewrite authMiddleware.js to use Supabase for user lookup/creation
+- [x] Rewrite adminSeeder.js to use Supabase for seeding demo users
+- [x] Rewrite ingredientController.js to use Supabase JS client
+- [x] Rewrite vendorController.js to use Supabase JS client
+- [x] Verify full CRUD via API: create vendor → create ingredient → list → update → delete
+- [x] Verify auth protection: 401 for unauthenticated, 200 for authenticated
+- [x] Verify multi-tenant isolation: admin sees all, client sees own
+- [x] Start frontend dev server on port 5173
+- [x] Commit and push changes
 
 ## Future Phases
-- [ ] Recipe CRUD frontend integration
+- [ ] Recipe CRUD frontend integration (backend uses pg, needs Supabase migration)
 - [ ] Operational costing engine frontend integration
 - [ ] Vercel deployment
 - [ ] Phone/Tablet responsive QA

@@ -37,6 +37,8 @@
 | 2026-05-08 | Color palette implementation oversight and gradient consistency fixes | `frontend/tailwind.config.js`, `frontend/src/index.css` | `1b2f503` | Verified all components use new brand palette |
 | 2026-05-09 | Developer collaboration tracking system | `CONTRIBUTOR_LOG.md`, `DEVELOPMENT_JOURNAL.md`, `ARCHITECTURE_DECISIONS.md`, `HANDOVER_NOTES.md`, `project_tasks.md` | *(current)* | Full engineering documentation system |
 
+| 2026-05-09 | Supabase database integration, ingredient CRUD end-to-end, auth stability | `backend/src/config/supabaseAdmin.js`, `backend/src/config/env.js`, `backend/.env`, `backend/src/index.js`, `backend/src/middleware/authMiddleware.js`, `backend/src/services/adminSeeder.js`, `backend/src/controllers/ingredientController.js`, `backend/src/controllers/vendorController.js` | *(current)* | Replaced pg pool with Supabase REST API for auth + ingredients + vendors. Full CRUD verified. Tenant isolation working. |
+
 ---
 
 ## OpenCode AI — Assisted Development

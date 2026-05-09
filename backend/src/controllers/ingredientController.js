@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { query } from "../config/db.js";
 import { AppError } from "../utils/appError.js";
-import { getReadScope, getTargetUserId } from "../utils/tenantScope.js";
+import { getTargetUserId } from "../utils/tenantScope.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 
 const ingredientSchema = z.object({
   ingredient_name: z.string().min(2),
@@ -11,17 +11,29 @@ const ingredientSchema = z.object({
 });
 
 export async function listIngredients(req, res) {
-  const scope = getReadScope(req, "i.user_id");
-  const result = await query(
-    `SELECT i.id, i.user_id, i.ingredient_name, i.unit, i.vendor_id, i.price_per_unit,
-            v.vendor_name, i.created_at
-     FROM ingredients i
-     LEFT JOIN vendors v ON v.id = i.vendor_id
-     ${scope.clause.replace("WHERE", "WHERE")}
-     ORDER BY i.created_at DESC`,
-    scope.values
-  );
-  res.json({ success: true, ingredients: result.rows });
+  let sbQuery = supabaseAdmin
+    .from("ingredients")
+    .select("id, user_id, ingredient_name, unit, vendor_id, price_per_unit, created_at, vendors(vendor_name)")
+    .order("created_at", { ascending: false });
+
+  if (req.user.role === "admin") {
+    if (req.query.user_id) {
+      sbQuery = sbQuery.eq("user_id", req.query.user_id);
+    }
+  } else {
+    sbQuery = sbQuery.eq("user_id", req.user.id);
+  }
+
+  const { data, error } = await sbQuery;
+  if (error) throw new AppError("Failed to fetch ingredients", 500);
+
+  const ingredients = data.map((item) => ({
+    ...item,
+    vendor_name: item.vendors?.vendor_name || null,
+    vendors: undefined
+  }));
+
+  res.json({ success: true, ingredients });
 }
 
 export async function createIngredient(req, res) {
@@ -31,14 +43,20 @@ export async function createIngredient(req, res) {
   const targetUserId = getTargetUserId(req);
   const { ingredient_name, unit, vendor_id, price_per_unit } = parsed.data;
 
-  const result = await query(
-    `INSERT INTO ingredients (user_id, ingredient_name, unit, vendor_id, price_per_unit)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, user_id, ingredient_name, unit, vendor_id, price_per_unit, created_at`,
-    [targetUserId, ingredient_name, unit, vendor_id || null, price_per_unit]
-  );
+  const { data, error } = await supabaseAdmin
+    .from("ingredients")
+    .insert({
+      user_id: targetUserId,
+      ingredient_name,
+      unit,
+      vendor_id: vendor_id || null,
+      price_per_unit
+    })
+    .select("id, user_id, ingredient_name, unit, vendor_id, price_per_unit, created_at")
+    .single();
 
-  res.status(201).json({ success: true, ingredient: result.rows[0] });
+  if (error) throw new AppError("Failed to create ingredient", 500);
+  res.status(201).json({ success: true, ingredient: data });
 }
 
 export async function updateIngredient(req, res) {
@@ -48,33 +66,45 @@ export async function updateIngredient(req, res) {
   const { id } = req.params;
   const { ingredient_name, unit, vendor_id, price_per_unit } = parsed.data;
 
-  const result = await query(
-    `UPDATE ingredients
-     SET ingredient_name = $1,
-         unit = $2,
-         vendor_id = $3,
-         price_per_unit = $4,
-         updated_at = now()
-     WHERE id = $5
-       AND ($6::text = 'admin' OR user_id = $7)
-     RETURNING id, user_id, ingredient_name, unit, vendor_id, price_per_unit, updated_at`,
-    [ingredient_name, unit, vendor_id || null, price_per_unit, id, req.user.role, req.user.id]
-  );
+  let sbQuery = supabaseAdmin
+    .from("ingredients")
+    .update({
+      ingredient_name,
+      unit,
+      vendor_id: vendor_id || null,
+      price_per_unit,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id)
+    .select("id, user_id, ingredient_name, unit, vendor_id, price_per_unit, updated_at");
 
-  if (!result.rows[0]) throw new AppError("Ingredient not found", 404);
-  res.json({ success: true, ingredient: result.rows[0] });
+  if (req.user.role !== "admin") {
+    sbQuery = sbQuery.eq("user_id", req.user.id);
+  }
+
+  const { data, error } = await sbQuery;
+  if (error) throw new AppError("Failed to update ingredient", 500);
+  if (!data || data.length === 0) throw new AppError("Ingredient not found", 404);
+
+  res.json({ success: true, ingredient: data[0] });
 }
 
 export async function deleteIngredient(req, res) {
   const { id } = req.params;
-  const result = await query(
-    `DELETE FROM ingredients
-     WHERE id = $1
-       AND ($2::text = 'admin' OR user_id = $3)
-     RETURNING id`,
-    [id, req.user.role, req.user.id]
-  );
 
-  if (!result.rows[0]) throw new AppError("Ingredient not found", 404);
+  let sbQuery = supabaseAdmin
+    .from("ingredients")
+    .delete()
+    .eq("id", id)
+    .select("id");
+
+  if (req.user.role !== "admin") {
+    sbQuery = sbQuery.eq("user_id", req.user.id);
+  }
+
+  const { data, error } = await sbQuery;
+  if (error) throw new AppError("Failed to delete ingredient", 500);
+  if (!data || data.length === 0) throw new AppError("Ingredient not found", 404);
+
   res.json({ success: true, message: "Ingredient deleted" });
 }

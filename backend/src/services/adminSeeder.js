@@ -1,17 +1,24 @@
 import bcrypt from "bcryptjs";
-import { query } from "../config/db.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 import { env } from "../config/env.js";
 
 async function seedUserIfMissing({ name, email, password, role = "client", subscriptionPlan = "free" }) {
-  const existing = await query("SELECT id FROM users WHERE email = $1", [email]);
-  if (existing.rows[0]) return;
+  const { data: existing } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existing) return;
 
   const passwordHash = await bcrypt.hash(password, 10);
-  await query(
-    `INSERT INTO users (name, email, password_hash, role, subscription_plan)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [name, email, passwordHash, role, subscriptionPlan]
-  );
+  await supabaseAdmin.from("users").insert({
+    name,
+    email,
+    password_hash: passwordHash,
+    role,
+    subscription_plan: subscriptionPlan
+  });
 }
 
 export async function seedAdminIfMissing() {
