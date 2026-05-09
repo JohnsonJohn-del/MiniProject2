@@ -68,7 +68,7 @@ export default function AnalyticsPage() {
           <motion.section variants={fadeUp} className="grid gap-6 xl:grid-cols-2">
             <div className="glass-card-premium p-6">
               <div className="flex items-center gap-3">
-                <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-blue-500 p-2.5 text-white shadow-sm">
+                <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 p-2.5 text-white shadow-sm">
                   <BarChart3 size={18} />
                 </div>
                 <h3 className="font-bold text-slate-900">Dish Margin Distribution</h3>

@@ -58,7 +58,7 @@ export default function DashboardLayout() {
         ) : null}
 
         <aside
-          className={`fixed z-20 flex h-full w-72 flex-col border-r border-slate-200/80 bg-white/95 backdrop-blur-xl transition-all duration-300 md:static md:translate-x-0 ${
+          className={`fixed z-20 flex h-full w-72 flex-col border-r border-white/30 bg-white/80 shadow-glass backdrop-blur-xl transition-all duration-300 md:static md:translate-x-0 ${
             open ? "translate-x-0 shadow-2xl" : "-translate-x-full"
           }`}
         >
@@ -109,7 +109,7 @@ export default function DashboardLayout() {
         </aside>
 
         <div className="flex flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200/60 bg-white/80 px-4 py-3 backdrop-blur-xl md:px-8">
+          <header className="sticky top-0 z-10 flex items-center justify-between border-b border-white/30 bg-white/60 px-4 py-3 shadow-glass backdrop-blur-xl md:px-8">
             <div className="flex items-center gap-3">
               <button
                 type="button"

@@ -83,7 +83,7 @@ export default function UsersPage() {
       <motion.div variants={fadeUp} className="glass-card-premium overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-lg bg-gradient-to-br from-brand-500 to-blue-500 p-2 text-white shadow-sm">
+            <div className="inline-flex rounded-lg bg-gradient-to-br from-brand-500 to-violet-500 p-2 text-white shadow-sm">
               <UsersIcon size={15} />
             </div>
             <h3 className="font-bold text-slate-900">Client Directory</h3>

@@ -6,7 +6,7 @@ import { SkeletonCard } from "../../components/ui/SkeletonCard";
 import { useCurrency } from "../../hooks/useCurrency";
 
 const kpiConfig = [
-  { label: "Total Recipes", key: "totalRecipes", icon: ChefHat, gradient: "from-brand-500 to-blue-500", format: (v) => String(v) },
+  { label: "Total Recipes", key: "totalRecipes", icon: ChefHat, gradient: "from-brand-500 to-violet-500", format: (v) => String(v) },
   { label: "Avg Margin", key: "avgMargin", icon: TrendingUp, gradient: "from-emerald-500 to-teal-500", format: (v) => `${Number(v || 0).toFixed(2)}%` },
   { label: "Menu Items", key: "menuItems", icon: ShoppingBag, gradient: "from-amber-500 to-orange-500", format: (v) => String(v) },
   { label: "Avg Recipe Cost", key: "avgRecipeCost", icon: DollarSign, gradient: "from-violet-500 to-purple-500", format: null }
@@ -144,7 +144,7 @@ export default function ClientDashboardPage() {
 
       <motion.section variants={fadeUp} className="glass-card-premium overflow-hidden p-7">
         <div className="flex items-center gap-3">
-          <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-blue-500 p-2 text-white shadow-sm">
+          <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 p-2 text-white shadow-sm">
             <ArrowUpRight size={16} />
           </div>
           <div>

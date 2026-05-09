@@ -45,7 +45,7 @@ const workspaces = [
     title: "Client Workspace",
     tagline: "Manage your restaurant profitability",
     description: "Ingredients, recipes, operational costs, AI pricing advisor, analytics, and subscription management.",
-    gradient: "from-brand-600 to-blue-600",
+    gradient: "from-brand-500 to-blue-500",
     shadow: "shadow-brand-500/20",
     path: "/app",
     features: [
@@ -62,7 +62,7 @@ const workspaces = [
     title: "Admin Workspace",
     tagline: "Oversee platform operations",
     description: "User management, cross-tenant monitoring, AI usage analytics, and platform-wide reporting.",
-    gradient: "from-violet-600 to-indigo-600",
+    gradient: "from-brand-600 to-violet-600",
     shadow: "shadow-violet-500/20",
     path: "/admin",
     features: [
@@ -102,8 +102,10 @@ export default function PagesDirectoryPage() {
   };
 
   return (
-    <div className="relative">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.1),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(139,92,246,0.08),transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.06),transparent_50%)]" />
+    <div className="relative overflow-hidden">
+      <div className="liquid-blob" style={{ width: 500, height: 500, background: 'radial-gradient(circle, #a78bfa, transparent)', top: '-150px', right: '-100px', animationDelay: '0s' }} />
+      <div className="liquid-blob" style={{ width: 350, height: 350, background: 'radial-gradient(circle, #f472b6, transparent)', bottom: '-80px', left: '-60px', animationDelay: '-5s' }} />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.1),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(236,72,153,0.06),transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.04),transparent_50%)]" />
 
       <motion.div
         variants={stagger}
@@ -126,7 +128,7 @@ export default function PagesDirectoryPage() {
             className="mt-6 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl"
           >
             Choose your
-            <span className="bg-gradient-to-r from-brand-600 to-blue-600 bg-clip-text text-transparent"> workspace</span>
+            <span className="bg-gradient-to-r from-brand-400 via-violet-500 to-rose-400 bg-clip-text text-transparent"> workspace</span>
           </motion.h1>
           <motion.p
             variants={fadeUp}
@@ -143,7 +145,7 @@ export default function PagesDirectoryPage() {
               whileHover={{ y: -6, scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="group relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-soft backdrop-blur-sm transition-all duration-500 hover:shadow-xl"
+              className="liquid-glass group relative overflow-hidden"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${ws.gradient} opacity-0 transition-opacity duration-500 group-hover:opacity-[0.03]`} />
               <div className="relative p-6 sm:p-8">
@@ -193,7 +195,7 @@ export default function PagesDirectoryPage() {
         </motion.div>
 
         <motion.div variants={fadeUp} className="mt-16">
-          <div className="rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-soft backdrop-blur-sm sm:p-8">
+            <div className="liquid-glass p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Platform Features</h3>

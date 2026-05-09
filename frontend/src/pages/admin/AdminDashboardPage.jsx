@@ -16,7 +16,7 @@ const fadeUp = {
 };
 
 const kpiConfig = [
-  { label: "Total Users", key: "total_users", icon: Activity, gradient: "from-brand-500 to-blue-500" },
+  { label: "Total Users", key: "total_users", icon: Activity, gradient: "from-brand-500 to-violet-500" },
   { label: "Paid Subscriptions", key: "paid_subscriptions", icon: Crown, gradient: "from-emerald-500 to-teal-500" },
   { label: "Total Recipes", key: "total_recipes", icon: ShoppingBag, gradient: "from-amber-500 to-orange-500" },
   { label: "AI Requests Today", key: "today_ai_requests", icon: Zap, gradient: "from-violet-500 to-purple-500" }

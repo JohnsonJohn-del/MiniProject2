@@ -16,7 +16,7 @@ const fadeUp = {
 
 const planConfig = {
   free: { gradient: "from-slate-400 to-slate-500", icon: UsersIcon, badge: "bg-slate-100 text-slate-700" },
-  pro: { gradient: "from-brand-500 to-blue-500", icon: CreditCard, badge: "bg-brand-50 text-brand-700" },
+  pro: { gradient: "from-brand-500 to-violet-500", icon: CreditCard, badge: "bg-brand-50 text-brand-700" },
   premium: { gradient: "from-amber-500 to-orange-500", icon: Crown, badge: "bg-amber-50 text-amber-700" }
 };
 

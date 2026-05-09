@@ -20,7 +20,7 @@ export default function PublicLayout() {
 
   return (
     <div className="app-shell">
-      <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/30 bg-white/60 shadow-glass backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <Logo />
 

@@ -40,7 +40,7 @@ const valueProps = [
     icon: BrainCog,
     title: "AI Pricing Guidance",
     copy: "Generate ideal price bands, margin warnings, and tactical improvements before menu changes.",
-    gradient: "from-amber-500 to-orange-500"
+    gradient: "from-accent-500 to-rose-500"
   },
   {
     icon: LineChart,
@@ -74,11 +74,12 @@ export default function LandingPage() {
   return (
     <div ref={sectionRef} className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.14)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.14)_1px,transparent_1px)] bg-[size:52px_52px] opacity-40" />
-      <motion.div style={{ y: glowY }} className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-brand-200/60 blur-[130px] animate-pulse-glow" />
-      <div className="pointer-events-none absolute -left-32 top-28 h-72 w-72 rounded-full bg-sky-200/50 blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 bottom-24 h-72 w-72 rounded-full bg-indigo-100/70 blur-3xl" />
+      <motion.div style={{ y: glowY }} className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-brand-400/30 blur-[130px] animate-breathe" />
+      <div className="liquid-blob" style={{ width: 500, height: 500, background: 'radial-gradient(circle, #a78bfa, transparent)', top: '-100px', right: '-100px', animationDelay: '0s' }} />
+      <div className="liquid-blob" style={{ width: 400, height: 400, background: 'radial-gradient(circle, #f472b6, transparent)', bottom: '-50px', left: '-80px', animationDelay: '-4s' }} />
+      <div className="liquid-blob" style={{ width: 300, height: 300, background: 'radial-gradient(circle, #60a5fa, transparent)', top: '40%', left: '30%', animationDelay: '-8s' }} />
 
-      <div className="relative mx-auto w-full max-w-7xl px-6 pb-24 pt-8 md:pb-32 md:pt-10">
+      <div className="liquid-ambient relative mx-auto w-full max-w-7xl px-6 pb-24 pt-8 md:pb-32 md:pt-10">
         <motion.section
           variants={stagger}
           initial="hidden"
@@ -96,7 +97,7 @@ export default function LandingPage() {
             <motion.div variants={reveal} className="space-y-6">
               <h1 className="max-w-3xl text-5xl font-extrabold tracking-[-0.03em] text-slate-900 md:text-7xl md:leading-[1.05]">
                 Price every dish with{" "}
-                <span className="text-gradient-brand">confidence</span>
+                <span className="text-gradient">confidence</span>
                 , not guesswork.
               </h1>
               <p className="max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
@@ -138,9 +139,9 @@ export default function LandingPage() {
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 5.6, repeat: Infinity, ease: "easeInOut" }}
-              className="glass-card-premium relative overflow-hidden p-6 md:p-7"
+              className="liquid-glass relative overflow-hidden p-6 md:p-7"
             >
-              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-brand-100/80 to-transparent" />
+              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-brand-100/40 to-transparent" />
               <div className="relative flex items-start justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-slate-500">AI Priceboard</p>
@@ -217,7 +218,7 @@ export default function LandingPage() {
               <motion.article
                 variants={reveal}
                 key={title}
-                className="glow-card glass-card-premium group p-6"
+                className="glow-card liquid-glass group p-6"
               >
                 <div className={`mb-5 inline-flex rounded-xl bg-gradient-to-br ${gradient} p-2.5 text-white shadow-sm`}>
                   <Icon size={18} />
@@ -236,7 +237,7 @@ export default function LandingPage() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="mt-20 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]"
         >
-          <div className="glass-card-premium p-7 md:p-8">
+          <div className="liquid-glass p-7 md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">Workflow</p>
             <h3 className="mt-3 text-2xl font-bold text-slate-900">From cost chaos to controlled margin.</h3>
             <div className="mt-6 space-y-3">
@@ -258,8 +259,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="glass-card-premium relative overflow-hidden p-7 md:p-8">
-            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-sky-100/80 to-transparent" />
+          <div className="liquid-glass relative overflow-hidden p-7 md:p-8">
+            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-brand-100/40 to-transparent" />
             <div className="relative">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Live Product Preview</p>
               <h3 className="mt-3 text-2xl font-bold text-slate-900">Profitability Snapshot</h3>
@@ -299,8 +300,8 @@ export default function LandingPage() {
           transition={{ duration: 0.7 }}
           className="mt-20"
         >
-          <div className="glass-card-premium relative overflow-hidden p-8 text-center md:p-12">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_55%)]" />
+          <div className="liquid-glass relative overflow-hidden p-8 text-center md:p-12">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.14),transparent_55%)]" />
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.07)_1px,transparent_1px)] bg-[size:32px_32px]" />
             <div className="relative">
               <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-brand-700 backdrop-blur-sm">
@@ -308,7 +309,7 @@ export default function LandingPage() {
               </div>
               <h3 className="mx-auto mt-5 max-w-3xl text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
                 Launch your profitability intelligence{" "}
-                <span className="text-gradient-brand">workspace</span> today.
+                <span className="text-gradient-cool">workspace</span> today.
               </h3>
               <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-600 md:text-base">
                 Start with recipe costing, grow into AI pricing automation, and run your operation with confidence.

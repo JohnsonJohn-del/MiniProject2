@@ -51,10 +51,10 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="glass-card-premium p-8"
+        className="liquid-glass p-8"
       >
         <div className="mb-6 flex items-center gap-3">
-          <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-blue-500 p-2.5 text-white shadow-sm">
+          <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 p-2.5 text-white shadow-sm">
             <Shield size={20} />
           </div>
           <div>

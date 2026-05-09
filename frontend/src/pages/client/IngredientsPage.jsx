@@ -133,7 +133,7 @@ export default function IngredientsPage() {
       <motion.section variants={fadeUp} className="grid gap-6 xl:grid-cols-2">
         <form onSubmit={submitVendor} className="glass-card-premium space-y-4 p-6">
           <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-blue-500 p-2.5 text-white shadow-sm">
+            <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 p-2.5 text-white shadow-sm">
               <Building2 size={18} />
             </div>
             <h2 className="text-lg font-bold text-slate-900">{editingVendorId ? "Edit Vendor" : "Add Vendor"}</h2>
