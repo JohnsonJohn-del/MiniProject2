@@ -1,6 +1,7 @@
 import { query } from "../config/db.js";
 import { verifyToken } from "../utils/jwt.js";
 import { AppError } from "../utils/appError.js";
+import { env } from "../config/env.js";
 
 export async function requireAuth(req, _res, next) {
   try {
@@ -23,12 +24,9 @@ export async function requireAuth(req, _res, next) {
       req.user = result.rows[0];
       return next();
     } catch {
-      const supabaseUrl = process.env.SUPABASE_URL || "https://qqfgolwjuqjvqcmcweua.supabase.co";
-      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxZmdvbHdqdXFqdnFjbWN3ZXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzA5MjcsImV4cCI6MjA5Mzg0NjkyN30.CzVyo2fXePgy_7lSBUDDoIgXs09kshib5c1k78RjxhQ";
-
-      const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      const response = await fetch(`${env.supabaseUrl}/auth/v1/user`, {
         headers: {
-          apikey: supabaseAnonKey,
+          apikey: env.supabaseAnonKey,
           Authorization: `Bearer ${token}`
         }
       });

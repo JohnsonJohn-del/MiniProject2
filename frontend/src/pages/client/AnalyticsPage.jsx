@@ -1,21 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
+import { motion } from "framer-motion";
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { BarChart3, PieChart as PieChartIcon, Sparkles, AlertCircle } from "lucide-react";
 import api from "../../services/api";
 import PageHeader from "../../components/ui/PageHeader";
 import { SkeletonCard } from "../../components/ui/SkeletonCard";
 
 const colors = ["#0f172a", "#334155", "#64748b", "#94a3b8", "#cbd5e1", "#3b82f6", "#1d4ed8", "#93c5fd"];
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } }
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
+};
 
 export default function AnalyticsPage() {
   const [data, setData] = useState(null);
@@ -50,13 +51,10 @@ export default function AnalyticsPage() {
   }));
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Analytics"
-        description="Track profitability distribution, ingredient cost impact, and margin movement by dish."
-      />
+    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
+      <PageHeader title="Analytics" description="Track profitability distribution, ingredient cost impact, and margin movement by dish." />
 
-      {error ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
+      {error ? <motion.p variants={fadeUp} className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</motion.p> : null}
 
       {loading ? (
         <section className="grid gap-6 xl:grid-cols-2">
@@ -67,55 +65,72 @@ export default function AnalyticsPage() {
 
       {!loading ? (
         <>
-          <section className="grid gap-6 xl:grid-cols-2">
-            <article className="glass-card p-6">
-              <h3 className="font-bold text-slate-900">Dish Margin Distribution</h3>
+          <motion.section variants={fadeUp} className="grid gap-6 xl:grid-cols-2">
+            <div className="glass-card-premium p-6">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-blue-500 p-2.5 text-white shadow-sm">
+                  <BarChart3 size={18} />
+                </div>
+                <h3 className="font-bold text-slate-900">Dish Margin Distribution</h3>
+              </div>
               <div className="mt-5 h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={profitabilityData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
+                    <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }} />
                     <Bar dataKey="margin" radius={[8, 8, 0, 0]}>
-                      {profitabilityData.map((_, index) => (
-                        <Cell key={index} fill={colors[index % colors.length]} />
-                      ))}
+                      {profitabilityData.map((_, index) => (<Cell key={index} fill={colors[index % colors.length]} />))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </article>
+            </div>
 
-            <article className="glass-card p-6">
-              <h3 className="font-bold text-slate-900">Ingredient Cost Impact</h3>
+            <div className="glass-card-premium p-6">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 p-2.5 text-white shadow-sm">
+                  <PieChartIcon size={18} />
+                </div>
+                <h3 className="font-bold text-slate-900">Ingredient Cost Impact</h3>
+              </div>
               <div className="mt-5 h-80">
                 {ingredientCostData.length === 0 ? (
-                  <div className="grid h-full place-items-center text-sm text-slate-500">
-                    Upgrade to Premium to view full ingredient impact analytics.
+                  <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-slate-500">
+                    <AlertCircle size={24} className="text-slate-300" />
+                    <p>Upgrade to Premium to view full ingredient impact analytics.</p>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={ingredientCostData} dataKey="value" nameKey="name" outerRadius={110} innerRadius={60}>
-                        {ingredientCostData.map((_, index) => (
-                          <Cell key={index} fill={colors[index % colors.length]} />
-                        ))}
+                        {ingredientCostData.map((_, index) => (<Cell key={index} fill={colors[index % colors.length]} />))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
               </div>
-            </article>
-          </section>
+            </div>
+          </motion.section>
 
-          <section className="glass-card p-7">
-            <h3 className="font-bold text-slate-900">AI Executive Insight</h3>
-            <p className="mt-3 text-sm text-slate-600">{data?.aiReportSummary || "No report available yet."}</p>
-          </section>
+          <motion.section variants={fadeUp} className="glass-card-premium p-7">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 p-2 text-white shadow-sm">
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900">AI Executive Insight</h3>
+                <p className="text-xs text-slate-500">Automated profitability analysis</p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-slate-600">
+              {data?.aiReportSummary || "No report available yet. Add more data to unlock AI-powered insights."}
+            </p>
+          </motion.section>
         </>
       ) : null}
-    </div>
+    </motion.div>
   );
 }

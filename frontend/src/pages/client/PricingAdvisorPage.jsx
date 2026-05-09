@@ -1,11 +1,22 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { AlertTriangle, Sparkles, Brain, TrendingUp, AlertCircle } from "lucide-react";
 import api from "../../services/api";
 import PageHeader from "../../components/ui/PageHeader";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import TextInput from "../../components/ui/TextInput";
 import EmptyState from "../../components/ui/EmptyState";
 import { useCurrency } from "../../hooks/useCurrency";
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } }
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
+};
 
 export default function PricingAdvisorPage() {
   const { formatUsd } = useCurrency();
@@ -26,20 +37,14 @@ export default function PricingAdvisorPage() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const getAdvice = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const payload = {
-        recipe_id: form.recipe_id,
-        current_price: Number(form.current_price || 0),
-        month: form.month
-      };
+      const payload = { recipe_id: form.recipe_id, current_price: Number(form.current_price || 0), month: form.month };
       const { data } = await api.post("/ai/pricing-advice", payload);
       setResult(data);
       await loadData();
@@ -51,157 +56,154 @@ export default function PricingAdvisorPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="AI Pricing Advisor"
-        description="Generate margin-focused selling price recommendations with actionable profitability insights."
-      />
+    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
+      <PageHeader title="AI Pricing Advisor" description="Generate margin-focused selling price recommendations with actionable profitability insights." />
 
-      {error ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
+      {error ? <motion.p variants={fadeUp} className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</motion.p> : null}
 
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <form onSubmit={getAdvice} className="glass-card space-y-4 p-6">
-          <h2 className="text-lg font-bold text-slate-900">Generate Recommendation</h2>
-
+      <motion.section variants={fadeUp} className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <form onSubmit={getAdvice} className="glass-card-premium space-y-4 p-6">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 p-2.5 text-white shadow-sm">
+              <Brain size={18} />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900">Generate Recommendation</h2>
+          </div>
           <label className="block space-y-2">
             <span className="text-sm font-medium text-slate-700">Recipe</span>
-            <select
-              value={form.recipe_id}
+            <select value={form.recipe_id}
               onChange={(event) => setForm((prev) => ({ ...prev, recipe_id: event.target.value }))}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
-              required
-            >
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100" required>
               <option value="">Select recipe</option>
-              {recipes.map((recipe) => (
-                <option key={recipe.id} value={recipe.id}>
-                  {recipe.recipe_name}
-                </option>
-              ))}
+              {recipes.map((recipe) => (<option key={recipe.id} value={recipe.id}>{recipe.recipe_name}</option>))}
             </select>
           </label>
-
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput
-              label="Current selling price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.current_price}
-              onChange={(event) => setForm((prev) => ({ ...prev, current_price: event.target.value }))}
-            />
+            <TextInput label="Current selling price" type="number" step="0.01" min="0" value={form.current_price}
+              onChange={(event) => setForm((prev) => ({ ...prev, current_price: event.target.value }))} />
             <label className="block space-y-2">
               <span className="text-sm font-medium text-slate-700">Month</span>
-              <input
-                type="month"
-                value={form.month}
+              <input type="month" value={form.month}
                 onChange={(event) => setForm((prev) => ({ ...prev, month: event.target.value }))}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
-                required
-              />
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100" required />
             </label>
           </div>
-
           <PrimaryButton type="submit" disabled={loading} className="w-full">
             {loading ? "Generating AI Advice..." : "Generate Pricing Advice"}
           </PrimaryButton>
         </form>
 
         {!result ? (
-          <EmptyState
-            title="No recommendation yet"
-            description="Select a recipe and generate your first AI-assisted pricing recommendation."
-          />
+          <EmptyState title="No recommendation yet" description="Select a recipe and generate your first AI-assisted pricing recommendation." />
         ) : (
           <div className="space-y-4">
-            <article className="glass-card p-6">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card-premium p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">{result.recommendation.recipeName}</h3>
-                  <p className="text-sm text-slate-500">Source: {result.source === "openai" ? "OpenAI" : "Rule-based fallback"}</p>
+                  <p className="text-xs text-slate-500">Source: {result.source === "openai" ? "OpenAI GPT-4o" : "Rule-based fallback"}</p>
                 </div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1 text-xs font-semibold text-amber-700">
                   <Sparkles size={13} /> AI Insight
                 </span>
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Final Dish Cost</p>
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3.5">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Final Dish Cost</p>
                   <p className="mt-1 text-xl font-bold text-slate-900">{formatUsd(result.costing.finalDishCost)}</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Suggested Price</p>
-                  <p className="mt-1 text-xl font-bold text-slate-900">{formatUsd(result.recommendation.idealSellingPrice)}</p>
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3.5">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Suggested Price</p>
+                  <p className="mt-1 text-xl font-bold text-brand-600">{formatUsd(result.recommendation.idealSellingPrice)}</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Current Margin</p>
-                  <p className="mt-1 text-xl font-bold text-slate-900">{Number(result.recommendation.currentMargin).toFixed(2)}%</p>
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3.5">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Current Margin</p>
+                  <p className={`mt-1 text-xl font-bold ${
+                    Number(result.recommendation.currentMargin) > 50 ? "text-emerald-600" :
+                    Number(result.recommendation.currentMargin) > 30 ? "text-amber-600" : "text-rose-600"
+                  }`}>
+                    {Number(result.recommendation.currentMargin).toFixed(2)}%
+                  </p>
                 </div>
               </div>
 
-              <p className="mt-4 text-sm text-slate-600">
-                Recommended range: {formatUsd(result.recommendation.suggestedRange.min)} - {formatUsd(result.recommendation.suggestedRange.max)}
-              </p>
-            </article>
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-600">
+                <TrendingUp size={14} className="text-slate-400" />
+                Recommended range: <span className="font-semibold text-slate-900">{formatUsd(result.recommendation.suggestedRange.min)}</span>
+                <span className="text-slate-300">—</span>
+                <span className="font-semibold text-slate-900">{formatUsd(result.recommendation.suggestedRange.max)}</span>
+              </div>
+            </motion.div>
 
             {result.warnings.length > 0 ? (
-              <article className="glass-card p-6">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card-premium p-6">
                 <h4 className="flex items-center gap-2 font-semibold text-rose-600">
                   <AlertTriangle size={16} /> Risk Warnings
                 </h4>
-                <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                  {result.warnings.map((warning) => (
-                    <li key={warning} className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2">
+                <ul className="mt-3 space-y-2">
+                  {result.warnings.map((warning, i) => (
+                    <motion.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                      className="flex items-start gap-2 rounded-xl border border-rose-100 bg-rose-50/80 px-3 py-2.5 text-sm text-rose-700">
+                      <AlertCircle size={14} className="mt-0.5 shrink-0" />
                       {warning}
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
-              </article>
+              </motion.div>
             ) : null}
 
-            <article className="glass-card p-6">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card-premium p-6">
               <h4 className="font-semibold text-slate-900">Pricing Improvements</h4>
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                {result.improvements.map((tip) => (
-                  <li key={tip} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <ul className="mt-3 space-y-2">
+                {result.improvements.map((tip, i) => (
+                  <motion.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                    className="flex items-start gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-700">
+                    <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-500" />
                     {tip}
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
-              <p className="mt-4 text-xs text-slate-500">
-                Daily AI usage: {result.usage.aiRequestsToday}/
-                {Number.isFinite(result.usage.aiQuotaPerDay) ? result.usage.aiQuotaPerDay : "Unlimited"}
-              </p>
-            </article>
+              <div className="mt-4 border-t border-slate-200/60 pt-3 text-xs text-slate-500">
+                Daily AI usage: {result.usage.aiRequestsToday}/{Number.isFinite(result.usage.aiQuotaPerDay) ? result.usage.aiQuotaPerDay : "Unlimited"}
+              </div>
+            </motion.div>
           </div>
         )}
-      </section>
+      </motion.section>
 
-      <section className="glass-card overflow-hidden">
-        <div className="border-b border-slate-200 px-6 py-4">
-          <h3 className="font-bold text-slate-900">Recent AI Usage</h3>
+      <motion.section variants={fadeUp} className="glass-card-premium overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 p-2 text-white">
+              <Brain size={14} />
+            </div>
+            <h3 className="font-bold text-slate-900">Recent AI Usage</h3>
+          </div>
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{logs.length}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-6 py-3">Date</th>
-                <th className="px-6 py-3">Request Count</th>
-                <th className="px-6 py-3">Time</th>
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="px-6 py-3 font-semibold">Date</th>
+                <th className="px-6 py-3 font-semibold">Request Count</th>
+                <th className="px-6 py-3 font-semibold">Time</th>
               </tr>
             </thead>
             <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} className="border-t border-slate-100">
-                  <td className="px-6 py-3 text-slate-700">{String(log.log_date).slice(0, 10)}</td>
-                  <td className="px-6 py-3 text-slate-700">{log.request_count}</td>
-                  <td className="px-6 py-3 text-slate-500">{new Date(log.created_at).toLocaleTimeString()}</td>
-                </tr>
+              {logs.map((log, i) => (
+                <motion.tr key={log.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}
+                  className="border-b border-slate-100/80 transition-colors last:border-0 hover:bg-slate-50/50">
+                  <td className="px-6 py-3.5 text-slate-700">{String(log.log_date).slice(0, 10)}</td>
+                  <td className="px-6 py-3.5 font-medium text-slate-900">{log.request_count}</td>
+                  <td className="px-6 py-3.5 text-slate-500">{new Date(log.created_at).toLocaleTimeString()}</td>
+                </motion.tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
   );
 }
