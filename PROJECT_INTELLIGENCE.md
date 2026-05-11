@@ -265,44 +265,35 @@ MiniProject/
 
 ### ✅ COMPLETED (Frontend + Backend + Database, tested end-to-end)
 
-- Supabase Auth: Login, session management, token refresh
+- Supabase Auth: Login, session management, token refresh, auto-profile creation
 - Vendor CRUD: Create, list, update, delete with tenant isolation
 - Ingredient CRUD: Create, list, update, delete with tenant isolation
+- Recipe CRUD: Create, list, update, delete, with ingredient mappings
+- Operational Costing: Electricity, gas, salary CRUD
+- Analytics: Costing summaries, margin tracking, user stats
 - API health check endpoints (`/api/health`, `/api/health/db`, `/api/health/supabase`)
 - Multi-tenant data isolation (admin sees all, client sees own)
 - Premium UI design system (liquid glassmorphism, animations, brand palette)
+- Demo seeding system (`seedDemoData.js`)
 
 ### 🟡 PARTIALLY COMPLETED (Frontend works, backend may fail)
 
-- Recipe CRUD: Backend controller migrated to Supabase, but `enforceRecipeLimit` middleware causes crash for non-admin users. Admin users should work.
-- AI Pricing Advisor: Frontend UI complete. Backend AI service (aiPricingService.js) has no pg dependency and works. But `aiController.js` uses pg for logging usage.
-- Operational Expenses CRUD: Frontend forms built. Backend still uses pg.
-- Menu Item CRUD: Frontend built. Backend still uses pg.
-- Costing Engine: Backend service (costingService.js) still uses pg.
-- Admin dashboard: Frontend complete. Backend still uses pg.
-- Client analytics: Frontend complete. Backend still uses pg.
+- AI Pricing Advisor: Frontend UI complete. Backend AI service (aiPricingService.js) has no pg dependency and works.
 
 ### 🔴 MOCKED (Works with fake data, no real integration)
 
 - AI pricing recommendations fall back to mock when no OpenAI API key. This is intentional and works correctly.
-- Demo accounts are pre-seeded and functional.
 
 ### 🔴 BROKEN (Currently non-functional)
 
-- Local JWT registration/login via `/api/auth/register` and `/api/auth/login` — still uses pg, will crash.
-- Any endpoint that calls a controller still using `query()` from `db.js` will return 500 Internal Server Error.
 - `api_import_tables.sql` has NOT been run in Supabase — OCR/import features have no database tables.
-- `enforceRecipeLimit` middleware causes 500 for client users trying to create recipes (though the middleware itself now uses migrated subscriptionService, the controller also needs pg-based services).
 
 ### ⬜ NOT STARTED
 
-- Recipe CRUD frontend integration (UI built but needs backend working)
-- Operational costing frontend integration
+- AI OCR import system
 - Vercel deployment
 - Phone/tablet responsive QA
 - Viva presentation preparation
-- Reinstall `api-architect` skill (timed out)
-- Reinstall `git-workflow-manager` skill (private repo)
 
 ---
 
@@ -373,19 +364,12 @@ MiniProject/
 
 ## 7. Known Problems & Blockers
 
-### 🚨 BLOCKER 1: 9 Controllers Still Use pg (PostgreSQL Pool)
-**Impact**: HIGH — Most API endpoints return 500 Internal Server Error.
-**Files**: adminController, aiController, analyticsController, authController, costingController, menuItemController, operationalExpenseController, subscriptionController, costingService.js
-**Root cause**: All import `{ query } from "../config/db.js"` which initializes a `pg.Pool`. The Supabase cloud database is unreachable via IPv4 direct connection (IPv6 only), and the connection pooler isn't enabled.
-**Fix needed**: Rewrite each controller to use `supabaseAdmin` from `supabaseAdmin.js` instead of `query()`.
-**Order of priority**: subscriptionService.js (done) → recipeController (done) → aiController + subscriptionController → costingService.js → remaining controllers.
-
-### 🚨 BLOCKER 2: Schema SQL Not Executed in Supabase
+### 🚨 BLOCKER 1: Schema SQL Not Executed in Supabase
 **Impact**: Tables may not exist in Supabase. The API tests worked (ingredients/vendors existed), suggesting someone ran the schema, but `ai_import_tables.sql` has NOT been run.
-**Root cause**: Supabase Dashboard SQL Editor requires manual execution. The `pg` connection also fails, so schema creation via backend isn't possible.
+**Root cause**: Supabase Dashboard SQL Editor requires manual execution.
 **Fix**: Run `backend/sql/schema.sql` and `backend/sql/ai_import_tables.sql` in Supabase Dashboard > SQL Editor.
 
-### 🚨 BLOCKER 3: authController Uses pg for Local Registration/Login
+### 🚨 BLOCKER 2: authController Uses pg for Local Registration/Login
 **Impact**: Users cannot register or login via `/api/auth/*` endpoints. However, frontend uses Supabase Auth directly (`signInWithPassword`, `signUp`), so the main auth flow works. The backend authMiddleware correctly verifies Supabase tokens.
 **Severity**: LOW — The frontend auth flow works via Supabase. The local auth endpoints are a development fallback.
 

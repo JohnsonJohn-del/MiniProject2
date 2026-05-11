@@ -56,40 +56,67 @@ export default function OperationalCostsPage() {
 
   const saveExpense = async (event) => {
     event.preventDefault();
-    await api.post("/operational-expenses", {
-      ...expenseForm,
-      electricity_bill: Number(expenseForm.electricity_bill || 0),
-      gas_bill: Number(expenseForm.gas_bill || 0),
-      salary_cost: Number(expenseForm.salary_cost || 0)
-    });
-    setExpenseForm({ ...initialExpense, month: expenseForm.month });
-    await loadData();
+    try {
+      await api.post("/operational-expenses", {
+        ...expenseForm,
+        electricity_bill: Number(expenseForm.electricity_bill || 0),
+        gas_bill: Number(expenseForm.gas_bill || 0),
+        salary_cost: Number(expenseForm.salary_cost || 0)
+      });
+      setExpenseForm({ ...initialExpense, month: expenseForm.month });
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save operational expense");
+    }
   };
 
   const createMenuItem = async (event) => {
     event.preventDefault();
-    await api.post("/menu-items", { recipe_id: menuForm.recipe_id, selling_price: Number(menuForm.selling_price || 0) });
-    setMenuForm(menuInitial);
-    await loadData();
+    try {
+      await api.post("/menu-items", { recipe_id: menuForm.recipe_id, selling_price: Number(menuForm.selling_price || 0) });
+      setMenuForm(menuInitial);
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to create menu item");
+    }
   };
 
   const previewCosting = async () => {
     if (!menuForm.recipe_id) return;
-    const { data } = await api.get(`/costing/recipes/${menuForm.recipe_id}?month=${expenseForm.month}`);
-    setCostingPreview(data);
+    try {
+      const { data } = await api.get(`/costing/recipes/${menuForm.recipe_id}?month=${expenseForm.month}`);
+      setCostingPreview(data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to generate costing preview");
+    }
   };
 
-  const deleteExpense = async (id) => { await api.delete(`/operational-expenses/${id}`); await loadData(); };
-  const deleteMenuItem = async (id) => { await api.delete(`/menu-items/${id}`); await loadData(); };
+  const deleteExpense = async (id) => { 
+    try {
+      await api.delete(`/operational-expenses/${id}`); 
+      await loadData(); 
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete expense");
+    }
+  };
+
+  const deleteMenuItem = async (id) => { 
+    try {
+      await api.delete(`/menu-items/${id}`); 
+      await loadData(); 
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete menu item");
+    }
+  };
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
         <div className="h-16 animate-pulse rounded-2xl bg-slate-200/60" />
         <div className="grid gap-6 xl:grid-cols-2">
           {[1, 2].map((i) => <div key={i} className="h-72 animate-pulse rounded-3xl bg-slate-200/60" />)}
         </div>
-      </div>
+      </motion.div>
     );
   }
 

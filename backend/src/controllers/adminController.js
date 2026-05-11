@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { query } from "../config/db.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 import { AppError } from "../utils/appError.js";
 
 const updatePlanSchema = z.object({
@@ -11,77 +11,93 @@ const toggleActiveSchema = z.object({
 });
 
 export async function getAdminOverview(req, res) {
-  const usersResult = await query(
-    `SELECT COUNT(*)::int AS total_users,
-            COUNT(*) FILTER (WHERE is_active = true)::int AS active_users,
-            COUNT(*) FILTER (WHERE subscription_plan != 'free')::int AS paid_subscriptions
-     FROM users
-     WHERE role = 'client'`
-  );
+  // Fetch users
+  const { data: users, error: usersError } = await supabaseAdmin
+    .from("users")
+    .select("is_active, subscription_plan")
+    .eq("role", "client");
+  if (usersError) throw new AppError("Failed to fetch users", 500);
 
-  const mostUsedPlanResult = await query(
-    `SELECT subscription_plan, COUNT(*)::int AS count
-     FROM users
-     WHERE role = 'client'
-     GROUP BY subscription_plan
-     ORDER BY count DESC
-     LIMIT 1`
-  );
+  let total_users = 0;
+  let active_users = 0;
+  let paid_subscriptions = 0;
+  const planCounts = {};
 
-  const recipeResult = await query("SELECT COUNT(*)::int AS total_recipes FROM recipes");
-  const aiResult = await query(
-    `SELECT COALESCE(SUM(request_count), 0)::int AS total_ai_requests,
-            COALESCE(SUM(request_count) FILTER (WHERE log_date = CURRENT_DATE), 0)::int AS today_ai_requests
-     FROM ai_usage_logs`
-  );
+  users.forEach(u => {
+    total_users++;
+    if (u.is_active) active_users++;
+    if (u.subscription_plan !== "free") paid_subscriptions++;
+    planCounts[u.subscription_plan] = (planCounts[u.subscription_plan] || 0) + 1;
+  });
 
-  const entityCountsResult = await query(
-    `SELECT
-      (SELECT COUNT(*)::int FROM ingredients) AS ingredients,
-      (SELECT COUNT(*)::int FROM menu_items) AS menu_items,
-      (SELECT COUNT(*)::int FROM operational_expenses) AS operational_expenses,
-      (SELECT COUNT(*)::int FROM ai_usage_logs) AS ai_logs`
-  );
+  const most_used_plan = Object.entries(planCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "free";
+
+  // Counts using head requests
+  const countTable = async (table) => {
+    const { count } = await supabaseAdmin.from(table).select("*", { count: 'exact', head: true });
+    return count || 0;
+  };
+
+  const total_recipes = await countTable("recipes");
+  const ingredients = await countTable("ingredients");
+  const menu_items = await countTable("menu_items");
+  const operational_expenses = await countTable("operational_expenses");
+  const ai_logs = await countTable("ai_usage_logs");
+
+  // AI Usage
+  const { data: aiLogs } = await supabaseAdmin.from("ai_usage_logs").select("request_count, log_date");
+  const todayStr = new Date().toISOString().split("T")[0];
+  let total_ai_requests = 0;
+  let today_ai_requests = 0;
+
+  (aiLogs || []).forEach(log => {
+    total_ai_requests += log.request_count;
+    if (log.log_date === todayStr) {
+      today_ai_requests += log.request_count;
+    }
+  });
 
   res.json({
     success: true,
     overview: {
-      ...usersResult.rows[0],
-      most_used_plan: mostUsedPlanResult.rows[0]?.subscription_plan || "free",
-      total_recipes: recipeResult.rows[0].total_recipes,
-      ...aiResult.rows[0],
-      ...entityCountsResult.rows[0]
+      total_users,
+      active_users,
+      paid_subscriptions,
+      most_used_plan,
+      total_recipes,
+      total_ai_requests,
+      today_ai_requests,
+      ingredients,
+      menu_items,
+      operational_expenses,
+      ai_logs
     }
   });
 }
 
 export async function listUsers(req, res) {
   const { search = "", plan, status } = req.query;
-  const where = ["role = 'client'"];
-  const values = [];
+  
+  let query = supabaseAdmin
+    .from("users")
+    .select("id, name, email, role, subscription_plan, is_active, recipes_created, ai_requests_used, created_at")
+    .eq("role", "client")
+    .order("created_at", { ascending: false });
 
+  if (plan) query = query.eq("subscription_plan", plan);
+  if (status === "active") query = query.eq("is_active", true);
+  if (status === "inactive") query = query.eq("is_active", false);
+  
+  const { data: users, error } = await query;
+  if (error) throw new AppError("Failed to fetch users", 500);
+
+  let filteredUsers = users;
   if (search) {
-    values.push(`%${search}%`);
-    where.push(`(name ILIKE $${values.length} OR email ILIKE $${values.length})`);
-  }
-  if (plan) {
-    values.push(plan);
-    where.push(`subscription_plan = $${values.length}`);
-  }
-  if (status === "active" || status === "inactive") {
-    values.push(status === "active");
-    where.push(`is_active = $${values.length}`);
+    const s = search.toLowerCase();
+    filteredUsers = users.filter(u => u.name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s));
   }
 
-  const result = await query(
-    `SELECT id, name, email, role, subscription_plan, is_active, recipes_created, ai_requests_used, created_at
-     FROM users
-     WHERE ${where.join(" AND ")}
-     ORDER BY created_at DESC`,
-    values
-  );
-
-  res.json({ success: true, users: result.rows });
+  res.json({ success: true, users: filteredUsers });
 }
 
 export async function updateUserPlan(req, res) {
@@ -89,18 +105,16 @@ export async function updateUserPlan(req, res) {
   if (!parsed.success) throw new AppError("Invalid subscription payload", 400);
 
   const { userId } = req.params;
-  const result = await query(
-    `UPDATE users
-     SET subscription_plan = $1,
-         updated_at = now()
-     WHERE id = $2
-       AND role = 'client'
-     RETURNING id, name, email, subscription_plan`,
-    [parsed.data.subscription_plan, userId]
-  );
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .update({ subscription_plan: parsed.data.subscription_plan, updated_at: new Date().toISOString() })
+    .eq("id", userId)
+    .eq("role", "client")
+    .select("id, name, email, subscription_plan")
+    .single();
 
-  if (!result.rows[0]) throw new AppError("Client not found", 404);
-  res.json({ success: true, user: result.rows[0] });
+  if (error || !data) throw new AppError("Client not found", 404);
+  res.json({ success: true, user: data });
 }
 
 export async function updateUserActiveStatus(req, res) {
@@ -108,64 +122,70 @@ export async function updateUserActiveStatus(req, res) {
   if (!parsed.success) throw new AppError("Invalid active status payload", 400);
 
   const { userId } = req.params;
-  const result = await query(
-    `UPDATE users
-     SET is_active = $1,
-         updated_at = now()
-     WHERE id = $2
-       AND role = 'client'
-     RETURNING id, name, email, is_active`,
-    [parsed.data.is_active, userId]
-  );
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .update({ is_active: parsed.data.is_active, updated_at: new Date().toISOString() })
+    .eq("id", userId)
+    .eq("role", "client")
+    .select("id, name, email, is_active")
+    .single();
 
-  if (!result.rows[0]) throw new AppError("Client not found", 404);
-  res.json({ success: true, user: result.rows[0] });
+  if (error || !data) throw new AppError("Client not found", 404);
+  res.json({ success: true, user: data });
 }
 
 export async function resetUserAiUsage(req, res) {
   const { userId } = req.params;
-  await query("DELETE FROM ai_usage_logs WHERE user_id = $1", [userId]);
+  
+  await supabaseAdmin.from("ai_usage_logs").delete().eq("user_id", userId);
 
-  const result = await query(
-    `UPDATE users
-     SET ai_requests_used = 0,
-         updated_at = now()
-     WHERE id = $1
-       AND role = 'client'
-     RETURNING id, name, email, ai_requests_used`,
-    [userId]
-  );
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .update({ ai_requests_used: 0, updated_at: new Date().toISOString() })
+    .eq("id", userId)
+    .eq("role", "client")
+    .select("id, name, email, ai_requests_used")
+    .single();
 
-  if (!result.rows[0]) throw new AppError("Client not found", 404);
-  res.json({ success: true, user: result.rows[0] });
+  if (error || !data) throw new AppError("Client not found", 404);
+  res.json({ success: true, user: data });
 }
 
 export async function listAdminAiUsage(req, res) {
-  const result = await query(
-    `SELECT l.id, l.user_id, u.name, u.email, l.request_count, l.log_date, l.created_at
-     FROM ai_usage_logs l
-     JOIN users u ON u.id = l.user_id
-     ORDER BY l.created_at DESC
-     LIMIT 200`
-  );
-  res.json({ success: true, logs: result.rows });
+  // We need to join ai_usage_logs with users
+  const { data: logs, error } = await supabaseAdmin
+    .from("ai_usage_logs")
+    .select("id, user_id, request_count, log_date, created_at, users(name, email)")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) throw new AppError("Failed to fetch AI logs", 500);
+
+  const mappedLogs = logs.map(l => ({
+    id: l.id,
+    user_id: l.user_id,
+    name: l.users?.name,
+    email: l.users?.email,
+    request_count: l.request_count,
+    log_date: l.log_date,
+    created_at: l.created_at
+  }));
+
+  res.json({ success: true, logs: mappedLogs });
 }
 
 export async function listEntityRecords(req, res) {
   const { entity } = req.params;
-  const allowList = {
-    recipes: "SELECT id, user_id, recipe_name, total_cost, created_at FROM recipes ORDER BY created_at DESC LIMIT 200",
-    ingredients:
-      "SELECT id, user_id, ingredient_name, unit, price_per_unit, created_at FROM ingredients ORDER BY created_at DESC LIMIT 200",
-    menu_items:
-      "SELECT id, user_id, recipe_id, selling_price, profit_margin, ai_suggested_price, created_at FROM menu_items ORDER BY created_at DESC LIMIT 200",
-    operational_expenses:
-      "SELECT id, user_id, electricity_bill, gas_bill, salary_cost, month, created_at FROM operational_expenses ORDER BY created_at DESC LIMIT 200"
-  };
+  const allowList = ["recipes", "ingredients", "menu_items", "operational_expenses"];
 
-  const sql = allowList[entity];
-  if (!sql) throw new AppError("Unsupported entity", 400);
+  if (!allowList.includes(entity)) throw new AppError("Unsupported entity", 400);
 
-  const result = await query(sql);
-  res.json({ success: true, records: result.rows });
+  const { data, error } = await supabaseAdmin
+    .from(entity)
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) throw new AppError(`Failed to fetch ${entity}`, 500);
+  res.json({ success: true, records: data });
 }

@@ -55,8 +55,8 @@ export default function ClientDashboardPage() {
         {loading
           ? Array.from({ length: 4 }).map((_, index) => <SkeletonCard key={index} className="h-28" />)
           : kpiConfig.map((card) => {
-              const rawValue = data?.overview?.[card.key];
-              const displayValue = card.format ? card.format(rawValue) : formatUsd(rawValue || 0);
+              const rawValue = data?.overview?.[card.key] ?? 0;
+              const displayValue = card.format ? card.format(rawValue) : formatUsd(rawValue);
               return (
                 <motion.article
                   key={card.label}

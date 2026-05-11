@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { env } from "../config/env.js";
-import { pool } from "../config/db.js";
 
 const router = Router();
 
@@ -14,12 +13,7 @@ router.get("/", (_req, res) => {
 });
 
 router.get("/db", async (_req, res) => {
-  try {
-    const result = await pool.query("SELECT 1 AS ok");
-    res.json({ success: true, database: "connected", postgres: result.rows[0].ok === 1 });
-  } catch (error) {
-    res.status(503).json({ success: false, database: "disconnected", error: error.message });
-  }
+  res.json({ success: false, database: "deprecated", message: "Use /api/health/supabase instead" });
 });
 
 router.get("/supabase", async (_req, res) => {

@@ -1,14 +1,18 @@
-import { query } from "../config/db.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 import { SUBSCRIPTION_PLANS } from "../config/subscriptionPlans.js";
 import { getTodayAiRequests } from "../services/subscriptionService.js";
 
 export async function getCurrentSubscription(req, res) {
-  const result = await query(
-    "SELECT id, subscription_plan, recipes_created, ai_requests_used FROM users WHERE id = $1",
-    [req.user.id]
-  );
+  const { data: user, error } = await supabaseAdmin
+    .from("users")
+    .select("id, subscription_plan, recipes_created, ai_requests_used")
+    .eq("id", req.user.id)
+    .single();
 
-  const user = result.rows[0];
+  if (error || !user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
   const plan = SUBSCRIPTION_PLANS[user.subscription_plan] || SUBSCRIPTION_PLANS.free;
   const todayAiUsage = await getTodayAiRequests(req.user.id);
 

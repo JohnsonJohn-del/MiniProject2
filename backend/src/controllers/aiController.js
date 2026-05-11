@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { query } from "../config/db.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 import { AppError } from "../utils/appError.js";
 import { calculateRecipeCost } from "../services/costingService.js";
 import { generatePricingAdvice } from "../services/aiPricingService.js";
@@ -24,14 +24,16 @@ export async function getAiPricingAdvice(req, res) {
     currentPrice: current_price
   });
 
-  await query(
-    `UPDATE menu_items
-     SET ai_suggested_price = $1,
-         updated_at = now()
-     WHERE recipe_id = $2
-       AND ($3::text = 'admin' OR user_id = $4)`,
-    [advice.recommendation.idealSellingPrice, recipe_id, req.user.role, req.user.id]
-  );
+  let updateQuery = supabaseAdmin
+    .from("menu_items")
+    .update({ ai_suggested_price: advice.recommendation.idealSellingPrice, updated_at: new Date().toISOString() })
+    .eq("recipe_id", recipe_id);
+    
+  if (req.user.role !== "admin") {
+    updateQuery = updateQuery.eq("user_id", req.user.id);
+  }
+  
+  await updateQuery;
 
   await incrementAiUsage(req.user.id);
   const todayUsage = await getTodayAiRequests(req.user.id);
@@ -56,14 +58,14 @@ export async function getAiPricingAdvice(req, res) {
 }
 
 export async function listMyAiUsageLogs(req, res) {
-  const result = await query(
-    `SELECT id, request_count, log_date, created_at
-     FROM ai_usage_logs
-     WHERE user_id = $1
-     ORDER BY created_at DESC
-     LIMIT 50`,
-    [req.user.id]
-  );
+  const { data: logs, error } = await supabaseAdmin
+    .from("ai_usage_logs")
+    .select("id, request_count, log_date, created_at")
+    .eq("user_id", req.user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
 
-  res.json({ success: true, logs: result.rows });
+  if (error) throw new AppError("Failed to fetch logs", 500);
+
+  res.json({ success: true, logs });
 }

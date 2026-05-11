@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { query } from "../config/db.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 import { AppError } from "../utils/appError.js";
-import { getReadScope, getTargetUserId } from "../utils/tenantScope.js";
+import { getTargetUserId } from "../utils/tenantScope.js";
 
 const expenseSchema = z.object({
   electricity_bill: z.coerce.number().min(0),
@@ -11,15 +11,26 @@ const expenseSchema = z.object({
 });
 
 export async function listOperationalExpenses(req, res) {
-  const scope = getReadScope(req);
-  const result = await query(
-    `SELECT id, user_id, electricity_bill, gas_bill, salary_cost,
-            TO_CHAR(month, 'YYYY-MM') AS month, created_at
-     FROM operational_expenses${scope.clause}
-     ORDER BY month DESC`,
-    scope.values
-  );
-  res.json({ success: true, expenses: result.rows });
+  let q = supabaseAdmin
+    .from("operational_expenses")
+    .select("id, user_id, electricity_bill, gas_bill, salary_cost, month, created_at")
+    .order("month", { ascending: false });
+
+  if (req.user.role === "admin" && req.query.user_id) {
+    q = q.eq("user_id", req.query.user_id);
+  } else if (req.user.role !== "admin") {
+    q = q.eq("user_id", req.user.id);
+  }
+
+  const { data, error } = await q;
+  if (error) throw new AppError("Failed to fetch expenses", 500);
+
+  const mapped = data.map(d => ({
+    ...d,
+    month: typeof d.month === 'string' ? d.month.substring(0, 7) : d.month
+  }));
+
+  res.json({ success: true, expenses: mapped });
 }
 
 export async function upsertOperationalExpense(req, res) {
@@ -30,32 +41,38 @@ export async function upsertOperationalExpense(req, res) {
   const { electricity_bill, gas_bill, salary_cost, month } = parsed.data;
   const monthDate = `${month}-01`;
 
-  const result = await query(
-    `INSERT INTO operational_expenses (user_id, electricity_bill, gas_bill, salary_cost, month)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (user_id, month)
-     DO UPDATE SET
-       electricity_bill = EXCLUDED.electricity_bill,
-       gas_bill = EXCLUDED.gas_bill,
-       salary_cost = EXCLUDED.salary_cost,
-       updated_at = now()
-     RETURNING id, user_id, electricity_bill, gas_bill, salary_cost,
-       TO_CHAR(month, 'YYYY-MM') AS month, updated_at`,
-    [targetUserId, electricity_bill, gas_bill, salary_cost, monthDate]
-  );
+  const { data, error } = await supabaseAdmin
+    .from("operational_expenses")
+    .upsert({
+      user_id: targetUserId,
+      electricity_bill,
+      gas_bill,
+      salary_cost,
+      month: monthDate,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "user_id,month" })
+    .select("id, user_id, electricity_bill, gas_bill, salary_cost, month, updated_at")
+    .single();
 
-  res.json({ success: true, expense: result.rows[0] });
+  if (error || !data) throw new AppError("Failed to save operational expense", 500);
+
+  res.json({ 
+    success: true, 
+    expense: {
+      ...data,
+      month: data.month.substring(0, 7)
+    } 
+  });
 }
 
 export async function deleteOperationalExpense(req, res) {
   const { id } = req.params;
-  const result = await query(
-    `DELETE FROM operational_expenses
-     WHERE id = $1
-       AND ($2::text = 'admin' OR user_id = $3)
-     RETURNING id`,
-    [id, req.user.role, req.user.id]
-  );
-  if (!result.rows[0]) throw new AppError("Expense record not found", 404);
+  
+  let q = supabaseAdmin.from("operational_expenses").delete().eq("id", id).select("id").single();
+  if (req.user.role !== "admin") q = q.eq("user_id", req.user.id);
+
+  const { data, error } = await q;
+  if (error || !data) throw new AppError("Expense record not found", 404);
+
   res.json({ success: true, message: "Operational expense deleted" });
 }

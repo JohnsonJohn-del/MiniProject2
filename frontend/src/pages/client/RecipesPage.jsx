@@ -68,41 +68,57 @@ export default function RecipesPage() {
         .filter((item) => item.ingredient_id && item.quantity)
         .map((item) => ({ ingredient_id: item.ingredient_id, quantity: Number(item.quantity) }))
     };
-    if (editingId) {
-      await api.put(`/recipes/${editingId}`, payload);
-    } else {
-      await api.post("/recipes", payload);
+    try {
+      if (editingId) {
+        await api.put(`/recipes/${editingId}`, payload);
+      } else {
+        await api.post("/recipes", payload);
+      }
+      resetForm();
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save recipe");
     }
-    resetForm();
-    await loadData();
   };
 
   const editRecipe = async (id) => {
-    const { data } = await api.get(`/recipes/${id}`);
-    const recipe = data.recipe;
-    setEditingId(id);
-    setRecipeName(recipe.recipe_name);
-    setItems(recipe.items.map((item) => ({ ingredient_id: item.ingredient_id, quantity: item.quantity })));
+    try {
+      const { data } = await api.get(`/recipes/${id}`);
+      const recipe = data.recipe;
+      setEditingId(id);
+      setRecipeName(recipe.recipe_name);
+      setItems(recipe.items.map((item) => ({ ingredient_id: item.ingredient_id, quantity: item.quantity })));
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load recipe details");
+    }
   };
 
   const removeRecipe = async (id) => {
-    await api.delete(`/recipes/${id}`);
-    if (selectedRecipeId === id) { setSelectedRecipeId(null); setRecipeDetail(null); }
-    await loadData();
+    try {
+      await api.delete(`/recipes/${id}`);
+      if (selectedRecipeId === id) { setSelectedRecipeId(null); setRecipeDetail(null); }
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete recipe");
+    }
   };
 
   const selectRecipe = async (id) => {
-    setSelectedRecipeId(id);
-    const { data } = await api.get(`/recipes/${id}`);
-    setRecipeDetail(data.recipe);
+    try {
+      setSelectedRecipeId(id);
+      const { data } = await api.get(`/recipes/${id}`);
+      setRecipeDetail(data.recipe);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch recipe detail");
+    }
   };
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
         <div className="h-16 animate-pulse rounded-2xl bg-slate-200/60" />
         <div className="h-96 animate-pulse rounded-3xl bg-slate-200/60" />
-      </div>
+      </motion.div>
     );
   }
 

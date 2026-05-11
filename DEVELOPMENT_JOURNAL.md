@@ -540,4 +540,28 @@ None — pure documentation generation. Research phase required reading 30+ file
 
 ---
 
+## 2026-05-11 22:30 — Session: End-to-End Auth, Demo Seeding & Frontend Resilience
+
+### Task
+Stabilize the registration/profile creation flow, seed realistic hospitality data, debug undefined dashboard metrics, fix failing costing workspace, and add defensive frontend rendering.
+
+### What Was Attempted
+1. Investigated 401 Unauthorized during registration (caused by Supabase email confirmation suppressing session token).
+2. Refactored `AuthContext.jsx` to buffer registration data into `localStorage` and automatically flush it to `/api/profile` ONLY upon confirmed login.
+3. Wrote `backend/scripts/seedDemoData.js` to create realistic "Artisan Cafe" demo data (ingredients, vendors, complex recipes, operational costs, and AI usage limits).
+4. Debugged frontend crash rendering string `"undefined"` for metric cards by using nullish coalescing `?? 0`.
+5. Fixed unhandled API rejections in `OperationalCostsPage`, `IngredientsPage`, and `RecipesPage` by wrapping CRUD operations in `try/catch` and gracefully logging errors.
+6. Removed legacy `pg` PostgreSQL SQL builders and dependencies completely from `tenantScope.js` and `package.json`.
+
+### Result
+✅ Registration onboarding buffer pattern completely resolves 401 blockages.
+✅ Application is successfully seeded with rich demo data and metrics immediately populate on Dashboard.
+✅ Frontend defensively falls back rather than crashing when API payloads are missing or delayed.
+✅ `pg` is fully deprecated and removed.
+
+### Current Status
+✅ Complete.
+
+---
+
 *Last updated: 2026-05-11*

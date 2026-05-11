@@ -1,4 +1,4 @@
-import { query } from "../config/db.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 import { getPlanConfig } from "../services/subscriptionService.js";
 
 function buildAiReportSummary({ topIngredient, lowMarginDish }) {
@@ -18,67 +18,82 @@ function buildAiReportSummary({ topIngredient, lowMarginDish }) {
 }
 
 export async function getClientAnalytics(req, res) {
-  const recipeStatsResult = await query(
-    `SELECT COUNT(*)::int AS total_recipes,
-            COALESCE(AVG(total_cost), 0)::numeric(12,2) AS avg_recipe_cost
-     FROM recipes
-     WHERE user_id = $1`,
-    [req.user.id]
-  );
+  // Fetch recipes
+  const { data: recipes } = await supabaseAdmin
+    .from("recipes")
+    .select("id, recipe_name, total_cost")
+    .eq("user_id", req.user.id);
 
-  const topMarginsResult = await query(
-    `SELECT m.id, r.recipe_name, m.selling_price, m.profit_margin
-     FROM menu_items m
-     JOIN recipes r ON r.id = m.recipe_id
-     WHERE m.user_id = $1
-     ORDER BY m.profit_margin DESC
-     LIMIT 5`,
-    [req.user.id]
-  );
+  // Fetch menu items
+  const { data: menuItems } = await supabaseAdmin
+    .from("menu_items")
+    .select("id, recipe_id, selling_price, profit_margin")
+    .eq("user_id", req.user.id);
 
-  const lowMarginsResult = await query(
-    `SELECT m.id, r.recipe_name, m.selling_price, m.profit_margin
-     FROM menu_items m
-     JOIN recipes r ON r.id = m.recipe_id
-     WHERE m.user_id = $1
-     ORDER BY m.profit_margin ASC
-     LIMIT 5`,
-    [req.user.id]
-  );
+  // Calculate recipe stats
+  let total_cost_sum = 0;
+  (recipes || []).forEach(r => total_cost_sum += Number(r.total_cost || 0));
+  const avg_recipe_cost = recipes?.length ? (total_cost_sum / recipes.length) : 0;
 
-  const ingredientImpactResult = await query(
-    `SELECT i.ingredient_name,
-            SUM(ri.quantity * i.price_per_unit)::numeric(12,2) AS cost_impact
-     FROM recipe_ingredients ri
-     JOIN ingredients i ON i.id = ri.ingredient_id
-     JOIN recipes r ON r.id = ri.recipe_id
-     WHERE r.user_id = $1
-     GROUP BY i.ingredient_name
-     ORDER BY cost_impact DESC
-     LIMIT 8`,
-    [req.user.id]
-  );
+  // Merge menu items with recipes
+  const mappedMenuItems = (menuItems || []).map(m => {
+    const r = recipes?.find(rec => rec.id === m.recipe_id);
+    return {
+      id: m.id,
+      recipe_name: r ? r.recipe_name : "Unknown",
+      selling_price: m.selling_price,
+      profit_margin: Number(m.profit_margin || 0)
+    };
+  });
 
-  const marginSummaryResult = await query(
-    `SELECT COALESCE(AVG(profit_margin), 0)::numeric(7,2) AS avg_margin,
-            COUNT(*)::int AS menu_items
-     FROM menu_items
-     WHERE user_id = $1`,
-    [req.user.id]
-  );
+  const topMargins = [...mappedMenuItems].sort((a, b) => b.profit_margin - a.profit_margin).slice(0, 5);
+  const lowMargins = [...mappedMenuItems].sort((a, b) => a.profit_margin - b.profit_margin).slice(0, 5);
 
-  const planResult = await query("SELECT subscription_plan FROM users WHERE id = $1", [req.user.id]);
-  const plan = getPlanConfig(planResult.rows[0]?.subscription_plan || "free");
+  let margin_sum = 0;
+  mappedMenuItems.forEach(m => margin_sum += m.profit_margin);
+  const avg_margin = mappedMenuItems.length ? (margin_sum / mappedMenuItems.length) : 0;
+
+  // Fetch ingredient impact using recipes and recipe_ingredients
+  const { data: recipeIdsData } = await supabaseAdmin
+    .from("recipes")
+    .select("id")
+    .eq("user_id", req.user.id);
+    
+  const recipeIds = recipeIdsData?.map(r => r.id) || [];
+  
+  let ingredientImpact = [];
+  if (recipeIds.length > 0) {
+    const { data: riData } = await supabaseAdmin
+      .from("recipe_ingredients")
+      .select("quantity, ingredients(id, ingredient_name, price_per_unit)")
+      .in("recipe_id", recipeIds);
+
+    const impactMap = {};
+    (riData || []).forEach(ri => {
+      const ing = ri.ingredients;
+      if (!ing) return;
+      const cost = Number(ri.quantity) * Number(ing.price_per_unit);
+      if (!impactMap[ing.ingredient_name]) impactMap[ing.ingredient_name] = 0;
+      impactMap[ing.ingredient_name] += cost;
+    });
+
+    ingredientImpact = Object.entries(impactMap)
+      .map(([name, cost]) => ({ ingredient_name: name, cost_impact: Number(cost.toFixed(2)) }))
+      .sort((a, b) => b.cost_impact - a.cost_impact)
+      .slice(0, 8);
+  }
+
+  const plan = getPlanConfig(req.user.subscription_plan || "free");
 
   const limitedData = {
     overview: {
-      totalRecipes: recipeStatsResult.rows[0].total_recipes,
-      avgRecipeCost: Number(recipeStatsResult.rows[0].avg_recipe_cost),
-      avgMargin: Number(marginSummaryResult.rows[0].avg_margin),
-      menuItems: marginSummaryResult.rows[0].menu_items
+      totalRecipes: recipes?.length || 0,
+      avgRecipeCost: Number(avg_recipe_cost.toFixed(2)),
+      avgMargin: Number(avg_margin.toFixed(2)),
+      menuItems: mappedMenuItems.length
     },
-    mostProfitable: topMarginsResult.rows.slice(0, 3),
-    leastProfitable: lowMarginsResult.rows.slice(0, 3)
+    mostProfitable: topMargins.slice(0, 3),
+    leastProfitable: lowMargins.slice(0, 3)
   };
 
   if (!plan.features.fullAnalytics) {
@@ -91,15 +106,15 @@ export async function getClientAnalytics(req, res) {
   }
 
   const aiReportSummary = buildAiReportSummary({
-    topIngredient: ingredientImpactResult.rows[0],
-    lowMarginDish: lowMarginsResult.rows[0]
+    topIngredient: ingredientImpact[0],
+    lowMarginDish: lowMargins[0]
   });
 
   res.json({
     success: true,
     tier: "full",
     ...limitedData,
-    ingredientCostImpact: ingredientImpactResult.rows,
+    ingredientCostImpact: ingredientImpact,
     aiReportSummary
   });
 }

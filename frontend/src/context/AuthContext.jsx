@@ -66,6 +66,32 @@ export function AuthProvider({ children }) {
           password: payload.password
         });
         if (error) throw error;
+
+        // Check if there's a pending profile to submit after successful login
+        const pendingProfile = localStorage.getItem("pendingProfile");
+        if (pendingProfile) {
+          try {
+            const p = JSON.parse(pendingProfile);
+            const { default: api } = await import("../services/api.js");
+            await api.post("/profile", {
+              business_name: p.business_name,
+              business_type: p.business_type,
+              phone_number: p.phone_number,
+              tax_id: p.tax_id,
+              website: p.website,
+              address: p.address,
+              city: p.city,
+              state: p.state,
+              country: p.country,
+              postal_code: p.postal_code,
+              online_platforms: p.online_platforms
+            });
+            localStorage.removeItem("pendingProfile");
+          } catch (profileError) {
+            console.error("Failed to save pending profile data:", profileError);
+          }
+        }
+
         return { user: mapSupabaseUser(data.user) };
       },
       async register(payload) {
@@ -81,6 +107,32 @@ export function AuthProvider({ children }) {
           }
         });
         if (error) throw error;
+        
+        // If email confirmation is required, Supabase won't return a session immediately.
+        if (!data.session) {
+          localStorage.setItem("pendingProfile", JSON.stringify(payload));
+          throw new Error("Please check your email to confirm your account. You can log in afterwards to complete the setup.");
+        }
+
+        try {
+          const { default: api } = await import("../services/api.js");
+          await api.post("/profile", {
+            business_name: payload.business_name,
+            business_type: payload.business_type,
+            phone_number: payload.phone_number,
+            tax_id: payload.tax_id,
+            website: payload.website,
+            address: payload.address,
+            city: payload.city,
+            state: payload.state,
+            country: payload.country,
+            postal_code: payload.postal_code,
+            online_platforms: payload.online_platforms
+          });
+        } catch (profileError) {
+          console.error("Failed to save profile data:", profileError);
+        }
+
         return { user: mapSupabaseUser(data.user) };
       },
       async loginAsDemo(role = "client") {

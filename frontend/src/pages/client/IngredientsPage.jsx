@@ -55,14 +55,18 @@ export default function IngredientsPage() {
 
   const submitVendor = async (event) => {
     event.preventDefault();
-    if (editingVendorId) {
-      await api.put(`/vendors/${editingVendorId}`, vendorForm);
-    } else {
-      await api.post("/vendors", vendorForm);
+    try {
+      if (editingVendorId) {
+        await api.put(`/vendors/${editingVendorId}`, vendorForm);
+      } else {
+        await api.post("/vendors", vendorForm);
+      }
+      setVendorForm(vendorInitialForm);
+      setEditingVendorId(null);
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save vendor");
     }
-    setVendorForm(vendorInitialForm);
-    setEditingVendorId(null);
-    await loadData();
   };
 
   const submitIngredient = async (event) => {
@@ -72,14 +76,18 @@ export default function IngredientsPage() {
       vendor_id: ingredientForm.vendor_id || null,
       price_per_unit: Number(ingredientForm.price_per_unit || 0)
     };
-    if (editingIngredientId) {
-      await api.put(`/ingredients/${editingIngredientId}`, payload);
-    } else {
-      await api.post("/ingredients", payload);
+    try {
+      if (editingIngredientId) {
+        await api.put(`/ingredients/${editingIngredientId}`, payload);
+      } else {
+        await api.post("/ingredients", payload);
+      }
+      setIngredientForm(ingredientInitialForm);
+      setEditingIngredientId(null);
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save ingredient");
     }
-    setIngredientForm(ingredientInitialForm);
-    setEditingIngredientId(null);
-    await loadData();
   };
 
   const editVendor = (vendor) => {
@@ -98,23 +106,31 @@ export default function IngredientsPage() {
   };
 
   const deleteVendor = async (id) => {
-    await api.delete(`/vendors/${id}`);
-    await loadData();
+    try {
+      await api.delete(`/vendors/${id}`);
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete vendor");
+    }
   };
 
   const deleteIngredient = async (id) => {
-    await api.delete(`/ingredients/${id}`);
-    await loadData();
+    try {
+      await api.delete(`/ingredients/${id}`);
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete ingredient");
+    }
   };
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
         <div className="h-16 animate-pulse rounded-2xl bg-slate-200/60" />
         <div className="grid gap-6 xl:grid-cols-2">
           {[1, 2].map((i) => <div key={i} className="h-64 animate-pulse rounded-3xl bg-slate-200/60" />)}
         </div>
-      </div>
+      </motion.div>
     );
   }
 

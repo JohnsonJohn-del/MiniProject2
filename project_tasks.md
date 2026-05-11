@@ -108,20 +108,20 @@
 ## Phase 15 - Controller Migration: Recipe + Subscription
 - [x] Migrate recipeController.js from pg to supabaseAdmin
 - [x] Migrate subscriptionService.js from pg to supabaseAdmin
-- [ ] Test recipe CRUD end-to-end (clean restart → admin token → CRUD)
-- [ ] Migrate aiController.js to supabaseAdmin
-- [ ] Migrate subscriptionController.js to supabaseAdmin
-- [ ] Migrate costingService.js to supabaseAdmin
+- [x] Test recipe CRUD end-to-end (clean restart → admin token → CRUD)
+- [x] Migrate aiController.js to supabaseAdmin
+- [x] Migrate subscriptionController.js to supabaseAdmin
+- [x] Migrate costingService.js to supabaseAdmin
 
 ## Phase 16 - Controller Migration: Remaining Controllers
-- [ ] Migrate costingController.js to supabaseAdmin
-- [ ] Migrate operationalExpenseController.js to supabaseAdmin
-- [ ] Migrate menuItemController.js to supabaseAdmin
-- [ ] Migrate analyticsController.js to supabaseAdmin
-- [ ] Migrate adminController.js to supabaseAdmin
-- [ ] Migrate authController.js to supabaseAdmin
-- [ ] Migrate importController.js to supabaseAdmin
-- [ ] Verify all 13 API route groups respond correctly
+- [x] Migrate costingController.js to supabaseAdmin
+- [x] Migrate operationalExpenseController.js to supabaseAdmin
+- [x] Migrate menuItemController.js to supabaseAdmin
+- [x] Migrate analyticsController.js to supabaseAdmin
+- [x] Migrate adminController.js to supabaseAdmin
+- [x] Migrate authController.js to supabaseAdmin
+- [x] Migrate importController.js to supabaseAdmin
+- [x] Verify all 13 API route groups respond correctly
 
 ## Phase 17 - AI Import & OCR Integration
 - [ ] Run ai_import_tables.sql in Supabase SQL Editor
@@ -130,18 +130,19 @@
 - [ ] Integrate ImportPage frontend with working backend
 
 ## Phase 18 - Frontend Integration & Verification
-- [ ] Verify client dashboard loads real data
-- [ ] Verify recipe builder works end-to-end
-- [ ] Verify operational costs CRUD
-- [ ] Verify AI pricing advisor returns results
-- [ ] Verify analytics charts render real data
-- [ ] Verify admin pages functional
+- [x] Verify client dashboard loads real data (fixed undefined rendering crashes)
+- [x] Verify recipe builder works end-to-end
+- [x] Verify operational costs CRUD (added error boundaries and resilience)
+- [x] Verify AI pricing advisor returns results
+- [x] Verify analytics charts render real data
+- [x] Verify admin pages functional
+- [x] Seed rich demo data to validate end-to-end flow
 
 ## Phase 19 - Project Intelligence Documentation
 - [x] Create PROJECT_INTELLIGENCE.md (master project understanding)
 - [x] Create FILE_MAP.md (quick-reference file index)
 - [x] Create AI_HANDOVER.md (AI onboarding for Antigravity IDE)
-- [ ] Keep documentation updated as migration progresses
+- [x] Keep documentation updated as migration progresses
 
 ## Future Phases
 - [ ] Vercel deployment

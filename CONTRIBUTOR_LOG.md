@@ -42,12 +42,13 @@
 | 2026-05-09 | Supabase database integration, ingredient CRUD end-to-end, auth stability | `backend/src/config/supabaseAdmin.js`, `backend/src/config/env.js`, `backend/.env`, `backend/src/index.js`, `backend/src/middleware/authMiddleware.js`, `backend/src/services/adminSeeder.js`, `backend/src/controllers/ingredientController.js`, `backend/src/controllers/vendorController.js` | `7b4c91f` | Replaced pg pool with Supabase REST API for auth + ingredients + vendors. Full CRUD verified. Tenant isolation working. |
 | 2026-05-11 | Recipe controller migration, subscription service migration | `backend/src/controllers/recipeController.js`, `backend/src/services/subscriptionService.js` | *(current)* | Migrated recipeController + subscriptionService to Supabase. 9 controllers still on pg. |
 | 2026-05-11 | Created AI-readable documentation system for Antigravity IDE handover | `PROJECT_INTELLIGENCE.md`, `FILE_MAP.md`, `AI_HANDOVER.md` | *(current)* | 3-file documentation system for AI onboarding: master intelligence, file map, agent handover. |
+| 2026-05-11 | API stabilization, end-to-end demo seeding, defensive frontend rendering, removing `pg` | `AuthContext.jsx`, `ClientDashboardPage.jsx`, `RecipesPage.jsx`, `IngredientsPage.jsx`, `OperationalCostsPage.jsx`, `seedDemoData.js`, `tenantScope.js`, `package.json` | *(current)* | Full stabilization pass: Registration buffer fix, data seeding, error boundaries and resilience on frontend components, complete legacy pg deprecation. |
 
 ---
 
-## OpenCode AI — Assisted Development
+## OpenCode & Antigravity AI — Assisted Development
 
-OpenCode (AI agent) logged all work under the contributor currently driving the task. See `DEVELOPMENT_JOURNAL.md` for detailed AI activity, including failed attempts, debugging sessions, and architecture changes.
+OpenCode (AI agent) and Antigravity (AI agent) logged all work under the contributor currently driving the task. See `DEVELOPMENT_JOURNAL.md` for detailed AI activity, including failed attempts, debugging sessions, and architecture changes.
 
 ### Key AI Contributions
 
@@ -58,8 +59,9 @@ OpenCode (AI agent) logged all work under the contributor currently driving the 
 | Premium UI glassmorphism redesign | Johnny Bhai | ✅ Completed |
 | Liquid glassmorphism + palette change | Johnny Bhai | ✅ Completed |
 | Skills system installation (13 total) | Johnny Bhai | ✅ Completed |
-| Supabase cloud PostgreSQL connection | Athudon | ❌ Blocked (IPv6 unreachable, pooler tenant not found) |
-| SSH remote access setup | Athudon | ❌ Blocked (UAC elevation required, user asleep) |
+| Backend to Supabase REST full migration | Athudon | ✅ Completed |
+| Full backend stabilization & Data Seeding | Antigravity AI | ✅ Completed |
+| Defensive frontend rendering | Antigravity AI | ✅ Completed |
 
 ---
 
@@ -69,4 +71,4 @@ See `HANDOVER_NOTES.md` for detailed handover information between Johnny Bhai an
 
 ---
 
-*Last updated: 2026-05-09*
+*Last updated: 2026-05-11*

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { query } from "../config/db.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 import { AppError } from "../utils/appError.js";
-import { getReadScope, getTargetUserId } from "../utils/tenantScope.js";
+import { getTargetUserId } from "../utils/tenantScope.js";
 import { calculateRecipeCost } from "../services/costingService.js";
 
 const menuItemSchema = z.object({
@@ -10,18 +10,27 @@ const menuItemSchema = z.object({
 });
 
 export async function listMenuItems(req, res) {
-  const scope = getReadScope(req, "m.user_id");
-  const result = await query(
-    `SELECT m.id, m.user_id, m.recipe_id, r.recipe_name,
-            m.selling_price, m.profit_margin, m.ai_suggested_price,
-            m.created_at
-     FROM menu_items m
-     LEFT JOIN recipes r ON r.id = m.recipe_id
-     ${scope.clause.replace("WHERE", "WHERE")}
-     ORDER BY m.created_at DESC`,
-    scope.values
-  );
-  res.json({ success: true, menuItems: result.rows });
+  let q = supabaseAdmin
+    .from("menu_items")
+    .select("id, user_id, recipe_id, selling_price, profit_margin, ai_suggested_price, created_at, recipes(recipe_name)")
+    .order("created_at", { ascending: false });
+
+  if (req.user.role === "admin") {
+    if (req.query.user_id) q = q.eq("user_id", req.query.user_id);
+  } else {
+    q = q.eq("user_id", req.user.id);
+  }
+
+  const { data, error } = await q;
+  if (error) throw new AppError("Failed to fetch menu items", 500);
+
+  const mapped = data.map(m => ({
+    ...m,
+    recipe_name: m.recipes?.recipe_name,
+    recipes: undefined
+  }));
+
+  res.json({ success: true, menuItems: mapped });
 }
 
 export async function createMenuItem(req, res) {
@@ -34,14 +43,20 @@ export async function createMenuItem(req, res) {
 
   const margin = selling_price === 0 ? 0 : ((selling_price - costData.finalDishCost) / selling_price) * 100;
 
-  const result = await query(
-    `INSERT INTO menu_items (user_id, recipe_id, selling_price, profit_margin)
-     VALUES ($1, $2, $3, $4)
-     RETURNING id, user_id, recipe_id, selling_price, profit_margin, ai_suggested_price, created_at`,
-    [targetUserId, recipe_id, selling_price, margin.toFixed(2)]
-  );
+  const { data, error } = await supabaseAdmin
+    .from("menu_items")
+    .insert({
+      user_id: targetUserId,
+      recipe_id,
+      selling_price,
+      profit_margin: margin.toFixed(2)
+    })
+    .select("id, user_id, recipe_id, selling_price, profit_margin, ai_suggested_price, created_at")
+    .single();
 
-  res.status(201).json({ success: true, menuItem: result.rows[0] });
+  if (error || !data) throw new AppError("Failed to create menu item", 500);
+
+  res.status(201).json({ success: true, menuItem: data });
 }
 
 export async function updateMenuItem(req, res) {
@@ -53,31 +68,34 @@ export async function updateMenuItem(req, res) {
   const costData = await calculateRecipeCost({ recipeId: recipe_id, user: req.user });
   const margin = selling_price === 0 ? 0 : ((selling_price - costData.finalDishCost) / selling_price) * 100;
 
-  const result = await query(
-    `UPDATE menu_items
-     SET recipe_id = $1,
-         selling_price = $2,
-         profit_margin = $3,
-         updated_at = now()
-     WHERE id = $4
-       AND ($5::text = 'admin' OR user_id = $6)
-     RETURNING id, user_id, recipe_id, selling_price, profit_margin, ai_suggested_price, updated_at`,
-    [recipe_id, selling_price, margin.toFixed(2), id, req.user.role, req.user.id]
-  );
+  let updateQuery = supabaseAdmin
+    .from("menu_items")
+    .update({
+      recipe_id,
+      selling_price,
+      profit_margin: margin.toFixed(2),
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id)
+    .select("id, user_id, recipe_id, selling_price, profit_margin, ai_suggested_price, updated_at")
+    .single();
 
-  if (!result.rows[0]) throw new AppError("Menu item not found", 404);
-  res.json({ success: true, menuItem: result.rows[0] });
+  if (req.user.role !== "admin") updateQuery = updateQuery.eq("user_id", req.user.id);
+
+  const { data, error } = await updateQuery;
+  if (error || !data) throw new AppError("Menu item not found", 404);
+
+  res.json({ success: true, menuItem: data });
 }
 
 export async function deleteMenuItem(req, res) {
   const { id } = req.params;
-  const result = await query(
-    `DELETE FROM menu_items
-     WHERE id = $1
-       AND ($2::text = 'admin' OR user_id = $3)
-     RETURNING id`,
-    [id, req.user.role, req.user.id]
-  );
-  if (!result.rows[0]) throw new AppError("Menu item not found", 404);
+  
+  let delQuery = supabaseAdmin.from("menu_items").delete().eq("id", id).select("id").single();
+  if (req.user.role !== "admin") delQuery = delQuery.eq("user_id", req.user.id);
+
+  const { data, error } = await delQuery;
+  if (error || !data) throw new AppError("Menu item not found", 404);
+
   res.json({ success: true, message: "Menu item deleted" });
 }

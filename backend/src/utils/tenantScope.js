@@ -4,14 +4,3 @@ export function getTargetUserId(req) {
   }
   return req.user.id;
 }
-
-export function getReadScope(req, column = "user_id") {
-  if (req.user.role === "admin") {
-    const selectedUserId = req.query.user_id;
-    if (!selectedUserId) {
-      return { clause: "", values: [] };
-    }
-    return { clause: ` WHERE ${column} = $1`, values: [selectedUserId] };
-  }
-  return { clause: ` WHERE ${column} = $1`, values: [req.user.id] };
-}
