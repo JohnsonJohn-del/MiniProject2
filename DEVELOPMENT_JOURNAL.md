@@ -475,4 +475,69 @@ Migrate remaining controllers to Supabase client, starting with recipes.
 
 ---
 
-*Last updated: 2026-05-09*
+## 2026-05-11 02:00 — Session: Recipe Controller Migration & Subscription Service Migration
+
+### Task
+Migrate recipe controller and subscription service from pg to Supabase client.
+
+### What Was Attempted
+1. Rewrote `recipeController.js` — All 5 CRUD operations (list, getById, create, update, delete) use `supabaseAdmin` instead of `query()`
+2. Rewrote `subscriptionService.js` — `getUserSubscriptionUsage`, `getTodayAiRequests`, `incrementAiUsage` use `supabaseAdmin`
+3. Attempted to test recipe CRUD via API with admin token
+4. Discovered backend crash loop due to stale node processes + pg connection errors
+
+### Result
+✅ recipeController.js migrated to Supabase (imports from supabaseAdmin, all queries use Supabase syntax)
+✅ subscriptionService.js migrated to Supabase
+❌ Testing interrupted by process management issues + other controllers still on pg
+
+### Issues Encountered
+- Backend crashes if any middleware/controller using pg is called before migration
+- `enforceRecipeLimit` middleware calls `getUserSubscriptionUsage` which now uses Supabase (migrated in this session)
+- Port 5000 EADDRINUSE from stale nodemon processes — needed to kill all node processes
+- The first test attempt returned 500 because the old `subscriptionService.js` still used pg — fixed in this session
+
+### Files Modified
+- `backend/src/controllers/recipeController.js` — Full rewrite to use supabaseAdmin
+- `backend/src/services/subscriptionService.js` — Full rewrite to use supabaseAdmin
+
+### Current Status
+✅ recipeController.js — Migrated code written
+✅ subscriptionService.js — Migrated code written
+🟡 Testing blocked — need clean restart + test with admin token
+🔴 9 controllers + 1 service still on pg
+
+### Next Planned Step
+Clean restart backend, test recipe CRUD with admin token, then migrate remaining controllers.
+
+---
+
+## 2026-05-11 03:00 — Session: AI Handover Documentation System
+
+### Task
+Create comprehensive AI-readable documentation system for migration to Antigravity IDE (Gemini-based environment).
+
+### What Was Attempted
+1. Gathered complete project understanding through exhaustive file reading (frontend tree, backend tree, all 12 existing docs)
+2. Created `PROJECT_INTELLIGENCE.md` — 15-section master project understanding file covering: overview, tech stack, directory breakdown, file responsibility mapping, feature status, development history, known problems, AI guidelines, priorities, database status, OCR roadmap, design language, contributor roles, environment setup, final context summary
+3. Created `FILE_MAP.md` — Quick-reference file index with responsibility + status for every major file
+4. Created `AI_HANDOVER.md` — Compact AI onboarding file optimized for fast context loading
+5. Updated `CONTRIBUTOR_LOG.md`, `DEVELOPMENT_JOURNAL.md`, `project_tasks.md`
+
+### Result
+✅ PROJECT_INTELLIGENCE.md created (270+ lines, 15 sections)
+✅ FILE_MAP.md created (quick file reference)
+✅ AI_HANDOVER.md created (compact onboarding)
+✅ CONTRIBUTOR_LOG.md updated
+✅ DEVELOPMENT_JOURNAL.md updated
+✅ project_tasks.md updated
+
+### Issues Encountered
+None — pure documentation generation. Research phase required reading 30+ files.
+
+### Current Status
+✅ Complete.
+
+---
+
+*Last updated: 2026-05-11*

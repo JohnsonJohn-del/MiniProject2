@@ -105,9 +105,45 @@
 - [x] Start frontend dev server on port 5173
 - [x] Commit and push changes
 
+## Phase 15 - Controller Migration: Recipe + Subscription
+- [x] Migrate recipeController.js from pg to supabaseAdmin
+- [x] Migrate subscriptionService.js from pg to supabaseAdmin
+- [ ] Test recipe CRUD end-to-end (clean restart → admin token → CRUD)
+- [ ] Migrate aiController.js to supabaseAdmin
+- [ ] Migrate subscriptionController.js to supabaseAdmin
+- [ ] Migrate costingService.js to supabaseAdmin
+
+## Phase 16 - Controller Migration: Remaining Controllers
+- [ ] Migrate costingController.js to supabaseAdmin
+- [ ] Migrate operationalExpenseController.js to supabaseAdmin
+- [ ] Migrate menuItemController.js to supabaseAdmin
+- [ ] Migrate analyticsController.js to supabaseAdmin
+- [ ] Migrate adminController.js to supabaseAdmin
+- [ ] Migrate authController.js to supabaseAdmin
+- [ ] Migrate importController.js to supabaseAdmin
+- [ ] Verify all 13 API route groups respond correctly
+
+## Phase 17 - AI Import & OCR Integration
+- [ ] Run ai_import_tables.sql in Supabase SQL Editor
+- [ ] Verify uploaded_documents and ingredient_purchases tables exist
+- [ ] Test OCR upload → parse → save flow end-to-end
+- [ ] Integrate ImportPage frontend with working backend
+
+## Phase 18 - Frontend Integration & Verification
+- [ ] Verify client dashboard loads real data
+- [ ] Verify recipe builder works end-to-end
+- [ ] Verify operational costs CRUD
+- [ ] Verify AI pricing advisor returns results
+- [ ] Verify analytics charts render real data
+- [ ] Verify admin pages functional
+
+## Phase 19 - Project Intelligence Documentation
+- [x] Create PROJECT_INTELLIGENCE.md (master project understanding)
+- [x] Create FILE_MAP.md (quick-reference file index)
+- [x] Create AI_HANDOVER.md (AI onboarding for Antigravity IDE)
+- [ ] Keep documentation updated as migration progresses
+
 ## Future Phases
-- [ ] Recipe CRUD frontend integration (backend uses pg, needs Supabase migration)
-- [ ] Operational costing engine frontend integration
 - [ ] Vercel deployment
 - [ ] Phone/Tablet responsive QA
 - [ ] Viva presentation preparation

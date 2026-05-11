@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ChefHat, DollarSign, ShoppingBag, TrendingUp } from "lucide-react";
+import { ArrowUpRight, ChefHat, DollarSign, FileText, ShoppingBag, TrendingUp } from "lucide-react";
+import { Link } from "react-router-dom";
 import api from "../../services/api";
 import { SkeletonCard } from "../../components/ui/SkeletonCard";
 import { useCurrency } from "../../hooks/useCurrency";
@@ -74,6 +75,31 @@ export default function ClientDashboardPage() {
                 </motion.article>
               );
             })}
+      </motion.section>
+
+      <motion.section variants={fadeUp} className="grid gap-4 md:grid-cols-2">
+        <Link to="/app/import" className="glass-card-premium group relative overflow-hidden p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 p-3 text-white shadow-sm transition-transform group-hover:scale-110">
+              <FileText size={20} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900">Import Bill</h3>
+              <p className="text-xs text-slate-500">Upload invoice — AI extracts ingredients &amp; prices</p>
+            </div>
+          </div>
+        </Link>
+        <Link to="/app/import" className="glass-card-premium group relative overflow-hidden p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="inline-flex rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 p-3 text-white shadow-sm transition-transform group-hover:scale-110">
+              <ChefHat size={20} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900">Import Recipe</h3>
+              <p className="text-xs text-slate-500">Paste recipe text — AI parses &amp; creates it automatically</p>
+            </div>
+          </div>
+        </Link>
       </motion.section>
 
       <motion.section variants={fadeUp} className="grid gap-6 lg:grid-cols-2">

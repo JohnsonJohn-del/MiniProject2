@@ -3,10 +3,13 @@ import {
   ArrowRight,
   BadgeDollarSign,
   BrainCog,
+  FileText,
   Flame,
   LineChart,
+  Scan,
   Sparkles,
   Shield,
+  Upload,
   Zap,
   Target
 } from "lucide-react";
@@ -227,6 +230,90 @@ export default function LandingPage() {
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{copy}</p>
               </motion.article>
             ))}
+          </motion.div>
+        </motion.section>
+
+        <motion.section
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="mt-20 space-y-7"
+        >
+          <motion.div variants={reveal} className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">New</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+              Smart AI Bill &amp; Recipe{" "}
+              <span className="text-gradient">Import</span>
+            </h2>
+            <p className="max-w-2xl text-sm text-slate-600">
+              Upload vendor invoices or paste any recipe — our AI extracts ingredients, quantities, and prices automatically.
+              No more manual data entry.
+            </p>
+          </motion.div>
+
+          <motion.div variants={stagger} className="grid gap-5 md:grid-cols-2">
+            <motion.article variants={reveal} className="liquid-glass group overflow-hidden p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 p-2.5 text-white shadow-sm">
+                  <Upload size={18} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Vendor Bill Import</h3>
+              </div>
+              <div className="space-y-3">
+                {[
+                  "Upload supplier invoice or receipt image",
+                  "AI extracts vendor name and line items",
+                  "Review, edit, and confirm parsed data",
+                  "Auto-creates vendor & purchase records"
+                ].map((step, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white/70 p-3 text-sm text-slate-700">
+                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700">{i + 1}</span>
+                    {step}
+                  </div>
+                ))}
+              </div>
+            </motion.article>
+
+            <motion.article variants={reveal} className="liquid-glass group overflow-hidden p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="inline-flex rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 p-2.5 text-white shadow-sm">
+                  <FileText size={18} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">AI Recipe Import</h3>
+              </div>
+              <div className="space-y-3">
+                {[
+                  "Paste any recipe text from the web or your notes",
+                  "AI parses title, ingredients, and quantities",
+                  "Preview, edit, and adjust before saving",
+                  "Auto-creates recipe with ingredient links"
+                ].map((step, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white/70 p-3 text-sm text-slate-700">
+                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">{i + 1}</span>
+                    {step}
+                  </div>
+                ))}
+              </div>
+            </motion.article>
+          </motion.div>
+
+          <motion.div variants={reveal} className="liquid-glass relative overflow-hidden p-6 md:p-8">
+            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-brand-100/30 to-transparent" />
+            <div className="relative flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 p-2.5 text-white shadow-sm">
+                  <Scan size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900">From upload to structured data in seconds</h4>
+                  <p className="text-xs text-slate-500">Invoice → OCR → AI Parse → Review → Save</p>
+                </div>
+              </div>
+              <Link to="/register" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-slate-800 hover:shadow-lg">
+                Try It Free <ArrowRight size={15} />
+              </Link>
+            </div>
           </motion.div>
         </motion.section>
 

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { query } from "../config/db.js";
 import { AppError } from "../utils/appError.js";
-import { getReadScope, getTargetUserId } from "../utils/tenantScope.js";
+import { getTargetUserId } from "../utils/tenantScope.js";
+import { supabaseAdmin } from "../config/supabaseAdmin.js";
 
 const recipeSchema = z.object({
   recipe_name: z.string().min(2),
@@ -23,46 +23,88 @@ function calculateIngredientCost(ingredients, itemMap) {
 }
 
 export async function listRecipes(req, res) {
-  const scope = getReadScope(req, "r.user_id");
-  const result = await query(
-    `SELECT r.id, r.user_id, r.recipe_name, r.total_cost, r.created_at,
-            COUNT(ri.ingredient_id)::int AS ingredient_count
-     FROM recipes r
-     LEFT JOIN recipe_ingredients ri ON ri.recipe_id = r.id
-     ${scope.clause.replace("WHERE", "WHERE")}
-     GROUP BY r.id
-     ORDER BY r.created_at DESC`,
-    scope.values
-  );
-  res.json({ success: true, recipes: result.rows });
+  let sbQuery = supabaseAdmin
+    .from("recipes")
+    .select("id, user_id, recipe_name, total_cost, created_at")
+    .order("created_at", { ascending: false });
+
+  if (req.user.role === "admin") {
+    if (req.query.user_id) {
+      sbQuery = sbQuery.eq("user_id", req.query.user_id);
+    }
+  } else {
+    sbQuery = sbQuery.eq("user_id", req.user.id);
+  }
+
+  const { data: recipes, error } = await sbQuery;
+  if (error) throw new AppError("Failed to fetch recipes", 500);
+
+  const recipeIds = recipes.map((r) => r.id);
+  const { data: riData } = await supabaseAdmin
+    .from("recipe_ingredients")
+    .select("recipe_id")
+    .in("recipe_id", recipeIds);
+
+  const countMap = {};
+  (riData || []).forEach((ri) => {
+    countMap[ri.recipe_id] = (countMap[ri.recipe_id] || 0) + 1;
+  });
+
+  const result = recipes.map((r) => ({
+    ...r,
+    ingredient_count: countMap[r.id] || 0
+  }));
+
+  res.json({ success: true, recipes: result });
 }
 
 export async function getRecipeById(req, res) {
   const { id } = req.params;
 
-  const recipeResult = await query(
-    `SELECT id, user_id, recipe_name, total_cost, created_at
-     FROM recipes
-     WHERE id = $1
-       AND ($2::text = 'admin' OR user_id = $3)`,
-    [id, req.user.role, req.user.id]
-  );
+  let sbQuery = supabaseAdmin
+    .from("recipes")
+    .select("id, user_id, recipe_name, total_cost, created_at")
+    .eq("id", id);
 
-  if (!recipeResult.rows[0]) throw new AppError("Recipe not found", 404);
+  if (req.user.role !== "admin") {
+    sbQuery = sbQuery.eq("user_id", req.user.id);
+  }
 
-  const ingredientsResult = await query(
-    `SELECT ri.ingredient_id, ri.quantity, i.ingredient_name, i.unit, i.price_per_unit
-     FROM recipe_ingredients ri
-     JOIN ingredients i ON i.id = ri.ingredient_id
-     WHERE ri.recipe_id = $1`,
-    [id]
-  );
+  const { data: recipes, error: recipeError } = await sbQuery;
+  if (recipeError) throw new AppError("Failed to fetch recipe", 500);
+  if (!recipes || recipes.length === 0) throw new AppError("Recipe not found", 404);
+
+  const recipe = recipes[0];
+
+  const { data: items, error: itemsError } = await supabaseAdmin
+    .from("recipe_ingredients")
+    .select("ingredient_id, quantity")
+    .eq("recipe_id", id);
+
+  if (itemsError) throw new AppError("Failed to fetch recipe ingredients", 500);
+
+  const ingredientIds = items.map((i) => i.ingredient_id);
+  const { data: ingredientDetails } = await supabaseAdmin
+    .from("ingredients")
+    .select("id, ingredient_name, unit, price_per_unit")
+    .in("id", ingredientIds);
+
+  const detailMap = {};
+  (ingredientDetails || []).forEach((d) => {
+    detailMap[d.id] = d;
+  });
+
+  const enrichedItems = (items || []).map((item) => ({
+    ingredient_id: item.ingredient_id,
+    quantity: item.quantity,
+    ...detailMap[item.ingredient_id]
+  }));
 
   res.json({
     success: true,
     recipe: {
-      ...recipeResult.rows[0],
-      items: ingredientsResult.rows
+      ...recipe,
+      items: enrichedItems
     }
   });
 }
@@ -75,48 +117,61 @@ export async function createRecipe(req, res) {
   const { recipe_name, items } = parsed.data;
 
   const ingredientIds = items.map((item) => item.ingredient_id);
-  const ingredientRows = await query(
-    `SELECT id, user_id, price_per_unit
-     FROM ingredients
-     WHERE id = ANY($1::uuid[])
-       AND ($2::text = 'admin' OR user_id = $3)`,
-    [ingredientIds, req.user.role, req.user.id]
-  );
 
-  if (ingredientRows.rows.length !== ingredientIds.length) {
+  let ingQuery = supabaseAdmin
+    .from("ingredients")
+    .select("id, user_id, price_per_unit")
+    .in("id", ingredientIds);
+
+  if (req.user.role !== "admin") {
+    ingQuery = ingQuery.eq("user_id", req.user.id);
+  }
+
+  const { data: ingredientRows, error: ingError } = await ingQuery;
+  if (ingError) throw new AppError("Failed to validate ingredients", 500);
+
+  if (!ingredientRows || ingredientRows.length !== ingredientIds.length) {
     throw new AppError("One or more ingredients are invalid", 400);
   }
 
   const itemMap = items.reduce((acc, item) => ({ ...acc, [item.ingredient_id]: item.quantity }), {});
-  const totalCost = calculateIngredientCost(ingredientRows.rows, itemMap);
+  const totalCost = calculateIngredientCost(ingredientRows, itemMap);
 
-  const recipeResult = await query(
-    `INSERT INTO recipes (user_id, recipe_name, total_cost)
-     VALUES ($1, $2, $3)
-     RETURNING id, user_id, recipe_name, total_cost, created_at`,
-    [targetUserId, recipe_name, totalCost.toFixed(2)]
-  );
+  const { data: recipe, error: recipeError } = await supabaseAdmin
+    .from("recipes")
+    .insert({
+      user_id: targetUserId,
+      recipe_name,
+      total_cost: totalCost.toFixed(2)
+    })
+    .select("id, user_id, recipe_name, total_cost, created_at")
+    .single();
 
-  const recipe = recipeResult.rows[0];
-  const valueChunks = items
-    .map((item, index) => `($1, $${index * 2 + 2}, $${index * 2 + 3})`)
-    .join(",");
-  const params = [recipe.id, ...items.flatMap((item) => [item.ingredient_id, item.quantity])];
+  if (recipeError) throw new AppError("Failed to create recipe", 500);
 
-  await query(
-    `INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity)
-     VALUES ${valueChunks}`,
-    params
-  );
+  const recipeIngredients = items.map((item) => ({
+    recipe_id: recipe.id,
+    ingredient_id: item.ingredient_id,
+    quantity: item.quantity
+  }));
 
-  await query(
-    `UPDATE users
-     SET recipes_created = (
-       SELECT COUNT(*)::int FROM recipes WHERE user_id = $1
-     )
-     WHERE id = $1`,
-    [recipe.user_id]
-  );
+  const { error: riError } = await supabaseAdmin
+    .from("recipe_ingredients")
+    .insert(recipeIngredients);
+
+  if (riError) throw new AppError("Failed to link ingredients", 500);
+
+  const { count, error: countError } = await supabaseAdmin
+    .from("recipes")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", recipe.user_id);
+
+  if (!countError) {
+    await supabaseAdmin
+      .from("users")
+      .update({ recipes_created: count })
+      .eq("id", recipe.user_id);
+  }
 
   res.status(201).json({ success: true, recipe });
 }
@@ -128,75 +183,99 @@ export async function updateRecipe(req, res) {
   const { id } = req.params;
   const { recipe_name, items } = parsed.data;
 
-  const ownedRecipe = await query(
-    `SELECT id, user_id FROM recipes
-     WHERE id = $1
-       AND ($2::text = 'admin' OR user_id = $3)`,
-    [id, req.user.role, req.user.id]
-  );
-  if (!ownedRecipe.rows[0]) throw new AppError("Recipe not found", 404);
+  let checkQuery = supabaseAdmin
+    .from("recipes")
+    .select("id, user_id")
+    .eq("id", id);
+
+  if (req.user.role !== "admin") {
+    checkQuery = checkQuery.eq("user_id", req.user.id);
+  }
+
+  const { data: ownedRecipe, error: checkError } = await checkQuery;
+  if (checkError) throw new AppError("Failed to find recipe", 500);
+  if (!ownedRecipe || ownedRecipe.length === 0) throw new AppError("Recipe not found", 404);
 
   const ingredientIds = items.map((item) => item.ingredient_id);
-  const ingredientRows = await query(
-    `SELECT id, price_per_unit
-     FROM ingredients
-     WHERE id = ANY($1::uuid[])
-       AND ($2::text = 'admin' OR user_id = $3)`,
-    [ingredientIds, req.user.role, req.user.id]
-  );
-  if (ingredientRows.rows.length !== ingredientIds.length) {
+
+  let ingQuery = supabaseAdmin
+    .from("ingredients")
+    .select("id, price_per_unit")
+    .in("id", ingredientIds);
+
+  if (req.user.role !== "admin") {
+    ingQuery = ingQuery.eq("user_id", req.user.id);
+  }
+
+  const { data: ingredientRows, error: ingError } = await ingQuery;
+  if (ingError) throw new AppError("Failed to validate ingredients", 500);
+  if (!ingredientRows || ingredientRows.length !== ingredientIds.length) {
     throw new AppError("One or more ingredients are invalid", 400);
   }
 
   const itemMap = items.reduce((acc, item) => ({ ...acc, [item.ingredient_id]: item.quantity }), {});
-  const totalCost = calculateIngredientCost(ingredientRows.rows, itemMap);
+  const totalCost = calculateIngredientCost(ingredientRows, itemMap);
 
-  const recipeResult = await query(
-    `UPDATE recipes
-     SET recipe_name = $1,
-         total_cost = $2,
-         updated_at = now()
-     WHERE id = $3
-     RETURNING id, user_id, recipe_name, total_cost, updated_at`,
-    [recipe_name, totalCost.toFixed(2), id]
-  );
+  const { data: recipe, error: updateError } = await supabaseAdmin
+    .from("recipes")
+    .update({
+      recipe_name,
+      total_cost: totalCost.toFixed(2),
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id)
+    .select("id, user_id, recipe_name, total_cost, updated_at");
 
-  await query("DELETE FROM recipe_ingredients WHERE recipe_id = $1", [id]);
+  if (updateError) throw new AppError("Failed to update recipe", 500);
 
-  const valueChunks = items
-    .map((item, index) => `($1, $${index * 2 + 2}, $${index * 2 + 3})`)
-    .join(",");
-  const params = [id, ...items.flatMap((item) => [item.ingredient_id, item.quantity])];
+  const { error: deleteError } = await supabaseAdmin
+    .from("recipe_ingredients")
+    .delete()
+    .eq("recipe_id", id);
 
-  await query(
-    `INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity)
-     VALUES ${valueChunks}`,
-    params
-  );
+  if (deleteError) throw new AppError("Failed to update recipe ingredients", 500);
 
-  res.json({ success: true, recipe: recipeResult.rows[0] });
+  const recipeIngredients = items.map((item) => ({
+    recipe_id: id,
+    ingredient_id: item.ingredient_id,
+    quantity: item.quantity
+  }));
+
+  const { error: riError } = await supabaseAdmin
+    .from("recipe_ingredients")
+    .insert(recipeIngredients);
+
+  if (riError) throw new AppError("Failed to link ingredients", 500);
+
+  res.json({ success: true, recipe: recipe[0] });
 }
 
 export async function deleteRecipe(req, res) {
   const { id } = req.params;
-  const result = await query(
-    `DELETE FROM recipes
-     WHERE id = $1
-       AND ($2::text = 'admin' OR user_id = $3)
-     RETURNING user_id`,
-    [id, req.user.role, req.user.id]
-  );
 
-  if (!result.rows[0]) throw new AppError("Recipe not found", 404);
+  let sbQuery = supabaseAdmin
+    .from("recipes")
+    .delete()
+    .eq("id", id)
+    .select("user_id");
 
-  await query(
-    `UPDATE users
-     SET recipes_created = (
-       SELECT COUNT(*)::int FROM recipes WHERE user_id = $1
-     )
-     WHERE id = $1`,
-    [result.rows[0].user_id]
-  );
+  if (req.user.role !== "admin") {
+    sbQuery = sbQuery.eq("user_id", req.user.id);
+  }
+
+  const { data, error } = await sbQuery;
+  if (error) throw new AppError("Failed to delete recipe", 500);
+  if (!data || data.length === 0) throw new AppError("Recipe not found", 404);
+
+  const { count } = await supabaseAdmin
+    .from("recipes")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", data[0].user_id);
+
+  await supabaseAdmin
+    .from("users")
+    .update({ recipes_created: count })
+    .eq("id", data[0].user_id);
 
   res.json({ success: true, message: "Recipe deleted" });
 }

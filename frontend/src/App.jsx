@@ -18,6 +18,7 @@ const PricingAdvisorPage = lazy(() => import("./pages/client/PricingAdvisorPage"
 const OperationalCostsPage = lazy(() => import("./pages/client/OperationalCostsPage"));
 const AnalyticsPage = lazy(() => import("./pages/client/AnalyticsPage"));
 const SubscriptionPage = lazy(() => import("./pages/client/SubscriptionPage"));
+const ImportPage = lazy(() => import("./pages/client/ImportPage"));
 
 const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage"));
 const UsersPage = lazy(() => import("./pages/admin/UsersPage"));
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/app/pricing-advisor" element={<PricingAdvisorPage />} />
             <Route path="/app/analytics" element={<AnalyticsPage />} />
             <Route path="/app/subscription" element={<SubscriptionPage />} />
+            <Route path="/app/import" element={<ImportPage />} />
           </Route>
         </Route>
 
