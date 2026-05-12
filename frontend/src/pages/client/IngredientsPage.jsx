@@ -12,8 +12,8 @@ const vendorInitialForm = { vendor_name: "", contact: "" };
 const ingredientInitialForm = { ingredient_name: "", unit: "", vendor_id: "", price_per_unit: "" };
 
 const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } }
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } }
 };
 
 const fadeUp = {
@@ -135,7 +135,7 @@ export default function IngredientsPage() {
   }
 
   return (
-    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
+    <motion.div key="content" variants={stagger} initial="hidden" animate="show" className="space-y-8">
       <PageHeader
         title="Ingredients & Vendors"
         description="Manage supplier data and per-unit ingredient pricing for precise costing."

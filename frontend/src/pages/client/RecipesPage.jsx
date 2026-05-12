@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, ChefHat, Eye, Edit3, BookOpen } from "lucide-react";
 import api from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/ui/PageHeader";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import EmptyState from "../../components/ui/EmptyState";
@@ -11,8 +13,8 @@ import { useCurrency } from "../../hooks/useCurrency";
 const initialItem = { ingredient_id: "", quantity: "" };
 
 const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } }
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } }
 };
 
 const fadeUp = {
@@ -22,6 +24,8 @@ const fadeUp = {
 
 export default function RecipesPage() {
   const { formatUsd } = useCurrency();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
@@ -62,6 +66,14 @@ export default function RecipesPage() {
 
   const submitRecipe = async (event) => {
     event.preventDefault();
+    if (!editingId) {
+      const plan = user?.subscription_plan || "free";
+      const maxRecipes = plan === "free" ? 3 : plan === "pro" ? 20 : Infinity;
+      if (recipes.length >= maxRecipes) {
+        navigate("/pricing");
+        return;
+      }
+    }
     const payload = {
       recipe_name: recipeName,
       items: items
@@ -123,7 +135,7 @@ export default function RecipesPage() {
   }
 
   return (
-    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
+    <motion.div key="content" variants={stagger} initial="hidden" animate="show" className="space-y-8">
       <PageHeader
         title="Recipe Builder"
         description="Build recipes with ingredient quantities and auto-calculate baseline ingredient costs."

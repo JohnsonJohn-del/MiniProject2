@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Calculator, PiggyBank, Trash2, Zap } from "lucide-react";
 import api from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/ui/PageHeader";
 import TextInput from "../../components/ui/TextInput";
 import PrimaryButton from "../../components/ui/PrimaryButton";
@@ -13,8 +15,8 @@ const menuInitial = { recipe_id: "", selling_price: "" };
 function getCurrentMonth() { return new Date().toISOString().slice(0, 7); }
 
 const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } }
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } }
 };
 
 const fadeUp = {
@@ -24,6 +26,8 @@ const fadeUp = {
 
 export default function OperationalCostsPage() {
   const { formatUsd, region } = useCurrency();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [expenseForm, setExpenseForm] = useState({ ...initialExpense, month: getCurrentMonth() });
   const [menuForm, setMenuForm] = useState(menuInitial);
   const [expenses, setExpenses] = useState([]);
@@ -56,6 +60,10 @@ export default function OperationalCostsPage() {
 
   const saveExpense = async (event) => {
     event.preventDefault();
+    if (user?.subscription_plan === "free") {
+      navigate("/pricing");
+      return;
+    }
     try {
       await api.post("/operational-expenses", {
         ...expenseForm,
@@ -72,6 +80,10 @@ export default function OperationalCostsPage() {
 
   const createMenuItem = async (event) => {
     event.preventDefault();
+    if (user?.subscription_plan === "free") {
+      navigate("/pricing");
+      return;
+    }
     try {
       await api.post("/menu-items", { recipe_id: menuForm.recipe_id, selling_price: Number(menuForm.selling_price || 0) });
       setMenuForm(menuInitial);
@@ -121,7 +133,7 @@ export default function OperationalCostsPage() {
   }
 
   return (
-    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
+    <motion.div key="content" variants={stagger} initial="hidden" animate="show" className="space-y-8">
       <PageHeader title="Operational Costing" description="Allocate utility and salary overhead into dish-level costing and menu margin decisions." />
 
       {error ? <motion.p variants={fadeUp} className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</motion.p> : null}

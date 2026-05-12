@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   BarChart3,
@@ -138,19 +138,9 @@ export default function DashboardLayout() {
           </header>
 
           <main className="flex-1 p-4 md:p-8">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 10, scale: 0.996 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.998 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <ErrorBoundary>
-                  <Outlet />
-                </ErrorBoundary>
-              </motion.div>
-            </AnimatePresence>
+              <ErrorBoundary>
+                <Outlet />
+              </ErrorBoundary>
           </main>
         </div>
       </div>

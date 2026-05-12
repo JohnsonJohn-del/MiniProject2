@@ -27,6 +27,13 @@ export async function uploadBill(req, res) {
   res.json({ success: true, document: doc });
 }
 
+// OCR a recipe image — just return the extracted text (no DB save needed)
+export async function uploadRecipeImage(req, res) {
+  if (!req.file) throw new AppError("No image file provided", 400);
+  const ocrText = await extractTextFromImage(req.file.path);
+  res.json({ success: true, ocr_text: ocrText });
+}
+
 export async function parseBill(req, res) {
   const { ocr_text } = req.body;
   if (!ocr_text) throw new AppError("OCR text is required", 400);

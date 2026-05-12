@@ -137,7 +137,7 @@ export function AuthProvider({ children }) {
       },
       async loginAsDemo(role = "client") {
         const email = role === "admin" ? "admin@demo.com" : "client@demo.com";
-        const password = "123456";
+        const password = "password123";
 
         let { data, error } = await supabase.auth.signInWithPassword({
           email,

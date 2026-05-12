@@ -16,6 +16,8 @@ import aiRoutes from "./routes/aiRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import importRoutes from "./routes/importRoutes.js";
+import insightRoutes from "./routes/insightRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -43,6 +45,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/import", importRoutes);
+    app.use("/api/insights", insightRoutes);
+    app.use("/api/payments", paymentRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

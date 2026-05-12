@@ -8,6 +8,7 @@ import {
   saveBillImport,
   saveRecipeImport,
   uploadBill,
+  uploadRecipeImage,
   listPurchases
 } from "../controllers/importController.js";
 
@@ -17,6 +18,7 @@ const upload = multer({ dest: "uploads/" });
 router.use(asyncHandler(requireAuth));
 
 router.post("/upload-bill", upload.single("image"), asyncHandler(uploadBill));
+router.post("/upload-recipe-image", upload.single("image"), asyncHandler(uploadRecipeImage));
 router.post("/parse-bill", asyncHandler(parseBill));
 router.post("/save-bill", asyncHandler(saveBillImport));
 router.post("/parse-recipe", asyncHandler(parseRecipe));
