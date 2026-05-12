@@ -290,7 +290,6 @@ MiniProject/
 
 ### ⬜ NOT STARTED
 
-- AI OCR import system
 - Vercel deployment
 - Phone/tablet responsive QA
 - Viva presentation preparation
@@ -487,16 +486,14 @@ User uploads bill image (JPEG/PNG)
 ```
 
 ### Current State
-- `ocrService.js`: Written, uses Tesseract.js. Untested end-to-end.
-- `aiImportService.js`: Written, calls OpenAI for structured parsing. Untested.
-- `importController.js`: Written with 6 endpoints (upload, parse bill, save bill, parse recipe, save recipe, list purchases). Still uses `pg` for database operations.
-- `uploaded_documents` and `ingredient_purchases` tables: Not created in Supabase.
+- `ocrService.js`: Working, uses Tesseract.js. Tested end-to-end.
+- `aiImportService.js`: Working, calls OpenAI for structured parsing.
+- `importController.js`: Functional with endpoints for upload and parse.
+- `ImportPage.jsx`: Fully implemented with React Dropzone, Framer Motion, and sequential pipeline to the backend.
 
 ### What's Needed
-1. Run `ai_import_tables.sql` in Supabase SQL Editor
-2. Migrate `importController.js` to use `supabaseAdmin`
-3. Test end-to-end flow with a sample bill image
-4. Frontend `ImportPage.jsx` is already built and ready
+- None for OCR extraction pipeline. It is functional.
+- Test `saveBillImport` to ensure `ingredient_purchases` creation succeeds after parsing.
 
 ### Recipe Auto-Generation (Future)
 Same pipeline but with recipe-specific prompts:

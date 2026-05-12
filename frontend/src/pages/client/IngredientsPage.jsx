@@ -42,8 +42,8 @@ export default function IngredientsPage() {
     setError("");
     try {
       const [vendorRes, ingredientRes] = await Promise.all([api.get("/vendors"), api.get("/ingredients")]);
-      setVendors(vendorRes.data.vendors);
-      setIngredients(ingredientRes.data.ingredients);
+      setVendors(vendorRes.data.vendors || []);
+      setIngredients(ingredientRes.data.ingredients || []);
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load ingredient module");
     } finally {

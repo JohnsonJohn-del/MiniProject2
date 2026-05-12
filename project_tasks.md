@@ -124,10 +124,10 @@
 - [x] Verify all 13 API route groups respond correctly
 
 ## Phase 17 - AI Import & OCR Integration
-- [ ] Run ai_import_tables.sql in Supabase SQL Editor
-- [ ] Verify uploaded_documents and ingredient_purchases tables exist
-- [ ] Test OCR upload → parse → save flow end-to-end
-- [ ] Integrate ImportPage frontend with working backend
+- [x] Run ai_import_tables.sql in Supabase SQL Editor
+- [x] Verify uploaded_documents and ingredient_purchases tables exist
+- [x] Test OCR upload → parse → save flow end-to-end
+- [x] Integrate ImportPage frontend with working backend using React Dropzone and Tesseract.js
 
 ## Phase 18 - Frontend Integration & Verification
 - [x] Verify client dashboard loads real data (fixed undefined rendering crashes)

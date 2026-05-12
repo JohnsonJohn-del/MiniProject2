@@ -30,8 +30,8 @@ export default function PricingAdvisorPage() {
   const loadData = async () => {
     try {
       const [recipesRes, logsRes] = await Promise.all([api.get("/recipes"), api.get("/ai/usage")]);
-      setRecipes(recipesRes.data.recipes);
-      setLogs(logsRes.data.logs);
+      setRecipes(recipesRes.data.recipes || []);
+      setLogs(logsRes.data.logs || []);
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load AI advisor data");
     }
@@ -136,13 +136,13 @@ export default function PricingAdvisorPage() {
               </div>
             </motion.div>
 
-            {result.warnings.length > 0 ? (
+            {(result?.warnings?.length || 0) > 0 ? (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card-premium p-6">
                 <h4 className="flex items-center gap-2 font-semibold text-rose-600">
                   <AlertTriangle size={16} /> Risk Warnings
                 </h4>
                 <ul className="mt-3 space-y-2">
-                  {result.warnings.map((warning, i) => (
+                  {(result?.warnings || []).map((warning, i) => (
                     <motion.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                       className="flex items-start gap-2 rounded-xl border border-rose-100 bg-rose-50/80 px-3 py-2.5 text-sm text-rose-700">
                       <AlertCircle size={14} className="mt-0.5 shrink-0" />
@@ -156,7 +156,7 @@ export default function PricingAdvisorPage() {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card-premium p-6">
               <h4 className="font-semibold text-slate-900">Pricing Improvements</h4>
               <ul className="mt-3 space-y-2">
-                {result.improvements.map((tip, i) => (
+                {(result?.improvements || []).map((tip, i) => (
                   <motion.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
                     className="flex items-start gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-700">
                     <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-500" />
@@ -165,7 +165,7 @@ export default function PricingAdvisorPage() {
                 ))}
               </ul>
               <div className="mt-4 border-t border-slate-200/60 pt-3 text-xs text-slate-500">
-                Daily AI usage: {result.usage.aiRequestsToday}/{Number.isFinite(result.usage.aiQuotaPerDay) ? result.usage.aiQuotaPerDay : "Unlimited"}
+                Daily AI usage: {result?.usage?.aiRequestsToday || 0}/{Number.isFinite(result?.usage?.aiQuotaPerDay) ? result?.usage?.aiQuotaPerDay : "Unlimited"}
               </div>
             </motion.div>
           </div>

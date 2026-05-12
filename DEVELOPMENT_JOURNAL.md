@@ -565,3 +565,32 @@ Stabilize the registration/profile creation flow, seed realistic hospitality dat
 ---
 
 *Last updated: 2026-05-11*
+
+---
+
+## 2026-05-12 08:15 — Session: Frontend Module Stabilization & OCR Real Implementation
+
+### Task
+Fully stabilize frontend module loading, prevent undefined state crashes, and implement actual OCR bill ingestion using React Dropzone, Tesseract.js, and Supabase Storage.
+
+### What Was Attempted
+1. Identified empty array / undefined property issues in `PricingAdvisorPage`, `RecipesPage`, `IngredientsPage`, and `OperationalCostsPage`.
+2. Applied strict null coalescing (`|| []`) across API data resolution assignments in frontend state initialization.
+3. Overhauled `ImportPage.jsx` completely:
+   - Added `react-dropzone` for bill image upload functionality.
+   - Connected file uploads to the robust existing backend OCR endpoint (`/api/import/upload-bill`) using `multer` and `tesseract.js`.
+   - Structured parsing pipeline automatically passing extracted text to OpenAI endpoint (`/api/import/parse-bill`).
+   - Integrated extensive `framer-motion` loading orchestrations and UX previews.
+4. Updated multiple documentation maps to mark frontend stabilization and Phase 17 OCR completion.
+
+### Result
+✅ All client modules are highly resilient to null returns and empty lists without crashing.
+✅ `ImportPage` is fully functional with real image uploading and real OCR using Tesseract.js.
+✅ Documentation is updated and accurate.
+
+### Current Status
+✅ Complete.
+
+---
+
+*Last updated: 2026-05-12*

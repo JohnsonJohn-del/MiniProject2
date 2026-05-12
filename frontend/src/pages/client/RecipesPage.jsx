@@ -43,8 +43,8 @@ export default function RecipesPage() {
     setError("");
     try {
       const [recipeRes, ingredientRes] = await Promise.all([api.get("/recipes"), api.get("/ingredients")]);
-      setRecipes(recipeRes.data.recipes);
-      setIngredients(ingredientRes.data.ingredients);
+      setRecipes(recipeRes.data.recipes || []);
+      setIngredients(ingredientRes.data.ingredients || []);
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load recipe module");
     } finally {

@@ -42,9 +42,9 @@ export default function OperationalCostsPage() {
       const [expensesRes, recipesRes, menuRes] = await Promise.all([
         api.get("/operational-expenses"), api.get("/recipes"), api.get("/menu-items")
       ]);
-      setExpenses(expensesRes.data.expenses);
-      setRecipes(recipesRes.data.recipes);
-      setMenuItems(menuRes.data.menuItems);
+      setExpenses(expensesRes.data.expenses || []);
+      setRecipes(recipesRes.data.recipes || []);
+      setMenuItems(menuRes.data.menuItems || []);
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load costing workspace");
     } finally {
