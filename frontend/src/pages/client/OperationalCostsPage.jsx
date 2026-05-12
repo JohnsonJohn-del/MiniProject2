@@ -33,7 +33,7 @@ export default function OperationalCostsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const recipeLookup = useMemo(() => Object.fromEntries(recipes.map((item) => [item.id, item.recipe_name])), [recipes]);
+  const recipeLookup = useMemo(() => Object.fromEntries((recipes || []).map((item) => [item.id, item.recipe_name])), [recipes]);
 
   const loadData = async () => {
     setLoading(true);
@@ -42,9 +42,9 @@ export default function OperationalCostsPage() {
       const [expensesRes, recipesRes, menuRes] = await Promise.all([
         api.get("/operational-expenses"), api.get("/recipes"), api.get("/menu-items")
       ]);
-      setExpenses(expensesRes.data.expenses || []);
-      setRecipes(recipesRes.data.recipes || []);
-      setMenuItems(menuRes.data.menuItems || []);
+      setExpenses(expensesRes.data?.expenses || (Array.isArray(expensesRes.data) ? expensesRes.data : []));
+      setRecipes(recipesRes.data?.recipes || (Array.isArray(recipesRes.data) ? recipesRes.data : []));
+      setMenuItems(menuRes.data?.menuItems || (Array.isArray(menuRes.data) ? menuRes.data : []));
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load costing workspace");
     } finally {
@@ -169,7 +169,7 @@ export default function OperationalCostsPage() {
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
               required>
               <option value="">Select recipe</option>
-              {recipes.map((recipe) => (<option key={recipe.id} value={recipe.id}>{recipe.recipe_name}</option>))}
+              {recipes?.map?.((recipe) => (<option key={recipe.id} value={recipe.id}>{recipe.recipe_name}</option>))}
             </select>
           </label>
           <TextInput label="Selling price" type="number" min="0" step="0.01" value={menuForm.selling_price}
@@ -200,8 +200,11 @@ export default function OperationalCostsPage() {
         <div className="glass-card-premium overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">
             <h3 className="font-bold text-slate-900">Operational Expense Records</h3>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{expenses.length}</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{expenses?.length || 0}</span>
           </div>
+          {!expenses || expenses.length === 0 ? (
+            <div className="p-6 text-center text-sm text-slate-500">No operational expenses recorded.</div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -214,13 +217,13 @@ export default function OperationalCostsPage() {
                 </tr>
               </thead>
               <tbody>
-                {expenses.map((expense, i) => (
-                  <motion.tr key={expense.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
+                {expenses?.map?.((expense, i) => (
+                  <motion.tr key={expense.id || i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
                     className="border-b border-slate-100/80 transition-colors last:border-0 hover:bg-slate-50/50">
                     <td className="px-6 py-3.5 font-medium text-slate-900">{expense.month}</td>
-                    <td className="px-6 py-3.5 text-slate-600">{formatUsd(expense.electricity_bill)}</td>
-                    <td className="px-6 py-3.5 text-slate-600">{formatUsd(expense.gas_bill)}</td>
-                    <td className="px-6 py-3.5 text-slate-600">{formatUsd(expense.salary_cost)}</td>
+                    <td className="px-6 py-3.5 text-slate-600">{formatUsd(expense.electricity_bill || 0)}</td>
+                    <td className="px-6 py-3.5 text-slate-600">{formatUsd(expense.gas_bill || 0)}</td>
+                    <td className="px-6 py-3.5 text-slate-600">{formatUsd(expense.salary_cost || 0)}</td>
                     <td className="px-6 py-3.5 text-right">
                       <button type="button" onClick={() => deleteExpense(expense.id)}
                         className="rounded-lg border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50"><Trash2 size={14} /></button>
@@ -230,13 +233,17 @@ export default function OperationalCostsPage() {
               </tbody>
             </table>
           </div>
+          )}
         </div>
 
         <div className="glass-card-premium overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">
             <h3 className="font-bold text-slate-900">Menu Items & Margin</h3>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{menuItems.length}</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{menuItems?.length || 0}</span>
           </div>
+          {!menuItems || menuItems.length === 0 ? (
+            <div className="p-6 text-center text-sm text-slate-500">No menu items created.</div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -248,17 +255,17 @@ export default function OperationalCostsPage() {
                 </tr>
               </thead>
               <tbody>
-                {menuItems.map((item, i) => (
-                  <motion.tr key={item.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
+                {menuItems?.map?.((item, i) => (
+                  <motion.tr key={item.id || i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
                     className="border-b border-slate-100/80 transition-colors last:border-0 hover:bg-slate-50/50">
                     <td className="px-6 py-3.5 font-medium text-slate-900">{recipeLookup[item.recipe_id] || "-"}</td>
-                    <td className="px-6 py-3.5 text-slate-600">{formatUsd(item.selling_price)}</td>
+                    <td className="px-6 py-3.5 text-slate-600">{formatUsd(item.selling_price || 0)}</td>
                     <td className="px-6 py-3.5">
                       <span className={`rounded-lg px-2 py-0.5 text-xs font-semibold ${
-                        Number(item.profit_margin) > 50 ? "bg-emerald-50 text-emerald-700" :
-                        Number(item.profit_margin) > 30 ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
+                        Number(item.profit_margin || 0) > 50 ? "bg-emerald-50 text-emerald-700" :
+                        Number(item.profit_margin || 0) > 30 ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
                       }`}>
-                        {Number(item.profit_margin).toFixed(2)}%
+                        {Number(item.profit_margin || 0).toFixed(2)}%
                       </span>
                     </td>
                     <td className="px-6 py-3.5 text-right">
@@ -270,6 +277,7 @@ export default function OperationalCostsPage() {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </motion.section>
     </motion.div>

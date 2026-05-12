@@ -33,7 +33,7 @@ export default function IngredientsPage() {
   const [error, setError] = useState("");
 
   const vendorLookup = useMemo(
-    () => Object.fromEntries(vendors.map((vendor) => [vendor.id, vendor.vendor_name])),
+    () => Object.fromEntries((vendors || []).map((vendor) => [vendor.id, vendor.vendor_name])),
     [vendors]
   );
 
@@ -42,8 +42,8 @@ export default function IngredientsPage() {
     setError("");
     try {
       const [vendorRes, ingredientRes] = await Promise.all([api.get("/vendors"), api.get("/ingredients")]);
-      setVendors(vendorRes.data.vendors || []);
-      setIngredients(ingredientRes.data.ingredients || []);
+      setVendors(vendorRes.data?.vendors || (Array.isArray(vendorRes.data) ? vendorRes.data : []));
+      setIngredients(ingredientRes.data?.ingredients || (Array.isArray(ingredientRes.data) ? ingredientRes.data : []));
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load ingredient module");
     } finally {
@@ -217,7 +217,7 @@ export default function IngredientsPage() {
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
             >
               <option value="">No vendor selected</option>
-              {vendors.map((vendor) => (
+              {vendors?.map?.((vendor) => (
                 <option key={vendor.id} value={vendor.id}>{vendor.vendor_name}</option>
               ))}
             </select>
@@ -241,9 +241,9 @@ export default function IngredientsPage() {
         <div className="glass-card-premium overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">
             <h3 className="font-bold text-slate-900">Vendors</h3>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{vendors.length}</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{vendors?.length || 0}</span>
           </div>
-          {vendors.length === 0 ? (
+          {!vendors || vendors.length === 0 ? (
             <EmptyState title="No vendors yet" description="Add your first supplier to start building your ingredient catalog." />
           ) : (
             <div className="overflow-x-auto">
@@ -256,9 +256,9 @@ export default function IngredientsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {vendors.map((vendor, i) => (
+                  {vendors?.map?.((vendor, i) => (
                     <motion.tr
-                      key={vendor.id}
+                      key={vendor.id || i}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.03 }}
@@ -283,9 +283,9 @@ export default function IngredientsPage() {
         <div className="glass-card-premium overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">
             <h3 className="font-bold text-slate-900">Ingredients</h3>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{ingredients.length}</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{ingredients?.length || 0}</span>
           </div>
-          {ingredients.length === 0 ? (
+          {!ingredients || ingredients.length === 0 ? (
             <EmptyState
               title="No ingredients yet"
               description="Create your first ingredient to begin dish-level cost calculations."
@@ -303,9 +303,9 @@ export default function IngredientsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ingredients.map((ingredient, i) => (
+                  {ingredients?.map?.((ingredient, i) => (
                     <motion.tr
-                      key={ingredient.id}
+                      key={ingredient.id || i}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.03 }}

@@ -19,6 +19,7 @@ import { useAuth } from "../hooks/useAuth";
 import Logo from "../components/ui/Logo";
 import CurrencySelector from "../components/ui/CurrencySelector";
 import DemoModeChip from "../components/ui/DemoModeChip";
+import ErrorBoundary from "../components/ui/ErrorBoundary";
 
 const clientLinks = [
   { to: "/app", label: "Dashboard", icon: BarChart3 },
@@ -145,7 +146,9 @@ export default function DashboardLayout() {
                 exit={{ opacity: 0, y: -8, scale: 0.998 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Outlet />
+                <ErrorBoundary>
+                  <Outlet />
+                </ErrorBoundary>
               </motion.div>
             </AnimatePresence>
           </main>

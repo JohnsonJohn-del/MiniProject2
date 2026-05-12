@@ -110,7 +110,7 @@ export default function SubscriptionPage() {
         <motion.section variants={fadeUp} className="glass-card-premium p-6">
           <h2 className="text-lg font-bold text-slate-900">Feature Access</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {Object.entries(data.features).map(([key, enabled]) => (
+            {Object.entries(data.features || {}).map(([key, enabled]) => (
               <div key={key}
                 className={`flex items-center gap-3 rounded-xl border p-3.5 text-sm transition-all ${
                   enabled ? "border-emerald-200/80 bg-emerald-50/30" : "border-slate-200/80 bg-white"

@@ -34,7 +34,7 @@ export default function RecipesPage() {
   const [error, setError] = useState("");
 
   const ingredientLookup = useMemo(
-    () => Object.fromEntries(ingredients.map((item) => [item.id, item.ingredient_name])),
+    () => Object.fromEntries((ingredients || []).map((item) => [item.id, item.ingredient_name])),
     [ingredients]
   );
 
@@ -43,8 +43,8 @@ export default function RecipesPage() {
     setError("");
     try {
       const [recipeRes, ingredientRes] = await Promise.all([api.get("/recipes"), api.get("/ingredients")]);
-      setRecipes(recipeRes.data.recipes || []);
-      setIngredients(ingredientRes.data.ingredients || []);
+      setRecipes(recipeRes.data?.recipes || (Array.isArray(recipeRes.data) ? recipeRes.data : []));
+      setIngredients(ingredientRes.data?.ingredients || (Array.isArray(ingredientRes.data) ? ingredientRes.data : []));
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load recipe module");
     } finally {
@@ -141,7 +141,7 @@ export default function RecipesPage() {
         <form onSubmit={submitRecipe} className="mt-4 space-y-5">
           <TextInput label="Recipe name" value={recipeName} onChange={(event) => setRecipeName(event.target.value)} required />
           <div className="space-y-3">
-            {items.map((item, index) => (
+            {items?.map?.((item, index) => (
               <div key={index} className="group grid gap-3 rounded-xl border border-slate-200/80 bg-white/50 p-3 transition-all hover:border-slate-300 md:grid-cols-[1fr_180px_44px]">
                 <select
                   value={item.ingredient_id}
@@ -150,7 +150,7 @@ export default function RecipesPage() {
                   required
                 >
                   <option value="">Select ingredient</option>
-                  {ingredients.map((ingredient) => (
+                  {ingredients?.map?.((ingredient) => (
                     <option key={ingredient.id} value={ingredient.id}>{ingredient.ingredient_name}</option>
                   ))}
                 </select>
@@ -198,9 +198,9 @@ export default function RecipesPage() {
               <BookOpen size={16} className="text-slate-500" />
               <h3 className="font-bold text-slate-900">Recipe Library</h3>
             </div>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{recipes.length}</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{recipes?.length || 0}</span>
           </div>
-          {recipes.length === 0 ? (
+          {!recipes || recipes.length === 0 ? (
             <EmptyState title="No recipes yet" description="Create your first recipe to start margin and pricing analysis." />
           ) : (
             <div className="overflow-x-auto">
@@ -214,16 +214,16 @@ export default function RecipesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recipes.map((recipe, i) => (
+                  {recipes?.map?.((recipe, i) => (
                     <motion.tr
-                      key={recipe.id}
+                      key={recipe.id || i}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.03 }}
                       className="border-b border-slate-100/80 transition-colors last:border-0 hover:bg-slate-50/50"
                     >
                       <td className="px-6 py-3.5 font-medium text-slate-900">{recipe.recipe_name}</td>
-                      <td className="px-6 py-3.5 text-slate-600">{recipe.ingredient_count}</td>
+                      <td className="px-6 py-3.5 text-slate-600">{recipe.ingredient_count || recipe.items?.length || 0}</td>
                       <td className="px-6 py-3.5 font-medium text-slate-900">{formatUsd(recipe.total_cost)}</td>
                       <td className="px-6 py-3.5">
                         <div className="flex justify-end gap-2">
@@ -255,7 +255,7 @@ export default function RecipesPage() {
               </div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Ingredients</p>
               <ul className="space-y-2">
-                {recipeDetail.items.map((item, i) => (
+                {recipeDetail.items?.map?.((item, i) => (
                   <motion.li
                     key={`${item.ingredient_id}-${i}`}
                     initial={{ opacity: 0, y: 6 }}
@@ -264,10 +264,10 @@ export default function RecipesPage() {
                     className="rounded-xl border border-slate-200/80 bg-white p-3.5 transition-all hover:border-slate-300"
                   >
                     <p className="text-sm font-semibold text-slate-900">
-                      {ingredientLookup[item.ingredient_id] || item.ingredient_name}
+                      {ingredientLookup[item.ingredient_id] || item.ingredient_name || "Unknown Ingredient"}
                     </p>
                     <p className="mt-0.5 text-xs text-slate-500">
-                      Qty {Number(item.quantity).toFixed(3)} {item.unit} &middot; {formatUsd(item.price_per_unit)}/unit
+                      Qty {Number(item.quantity).toFixed(3)} {item.unit || ""} &middot; {formatUsd(item.price_per_unit || 0)}/unit
                     </p>
                   </motion.li>
                 ))}

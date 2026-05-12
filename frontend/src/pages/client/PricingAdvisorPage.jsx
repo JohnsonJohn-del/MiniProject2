@@ -30,8 +30,8 @@ export default function PricingAdvisorPage() {
   const loadData = async () => {
     try {
       const [recipesRes, logsRes] = await Promise.all([api.get("/recipes"), api.get("/ai/usage")]);
-      setRecipes(recipesRes.data.recipes || []);
-      setLogs(logsRes.data.logs || []);
+      setRecipes(recipesRes.data?.recipes || (Array.isArray(recipesRes.data) ? recipesRes.data : []));
+      setLogs(logsRes.data?.logs || (Array.isArray(logsRes.data) ? logsRes.data : []));
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load AI advisor data");
     }
@@ -75,7 +75,7 @@ export default function PricingAdvisorPage() {
               onChange={(event) => setForm((prev) => ({ ...prev, recipe_id: event.target.value }))}
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100" required>
               <option value="">Select recipe</option>
-              {recipes.map((recipe) => (<option key={recipe.id} value={recipe.id}>{recipe.recipe_name}</option>))}
+              {recipes?.map?.((recipe) => (<option key={recipe.id} value={recipe.id}>{recipe.recipe_name}</option>))}
             </select>
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -180,8 +180,11 @@ export default function PricingAdvisorPage() {
             </div>
             <h3 className="font-bold text-slate-900">Recent AI Usage</h3>
           </div>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{logs.length}</span>
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{logs?.length || 0}</span>
         </div>
+        {!logs || logs.length === 0 ? (
+          <div className="p-6 text-center text-sm text-slate-500">No recent AI usage logs.</div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
@@ -192,7 +195,7 @@ export default function PricingAdvisorPage() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((log, i) => (
+              {logs?.map?.((log, i) => (
                 <motion.tr key={log.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}
                   className="border-b border-slate-100/80 transition-colors last:border-0 hover:bg-slate-50/50">
                   <td className="px-6 py-3.5 text-slate-700">{String(log.log_date).slice(0, 10)}</td>
@@ -203,6 +206,7 @@ export default function PricingAdvisorPage() {
             </tbody>
           </table>
         </div>
+        )}
       </motion.section>
     </motion.div>
   );

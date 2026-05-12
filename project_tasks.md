@@ -148,3 +148,9 @@
 - [ ] Vercel deployment
 - [ ] Phone/Tablet responsive QA
 - [ ] Viva presentation preparation
+
+ -   [ x ]   I m p l e m e n t   G l o b a l   E r r o r   B o u n d a r y 
+ -   [ x ]   F i x   U n s a f e   M a p p i n g   ( I n g r e d i e n t s ,   R e c i p e s ,   O p e r a t i o n a l   C o s t s ,   P r i c i n g   A d v i s o r ,   S u b s c r i p t i o n ) 
+ -   [ x ]   P r e v e n t   S i l e n t   R u n t i m e   C r a s h e s 
+  
+ 
