@@ -5,7 +5,6 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const LandingPage = lazy(() => import("./pages/public/LandingPage"));
-const PricingPage = lazy(() => import("./pages/public/PricingPage"));
 const LoginPage = lazy(() => import("./pages/public/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/public/RegisterPage"));
 const PagesDirectoryPage = lazy(() => import("./pages/public/PagesDirectoryPage"));
@@ -17,13 +16,12 @@ const RecipesPage = lazy(() => import("./pages/client/RecipesPage"));
 const PricingAdvisorPage = lazy(() => import("./pages/client/PricingAdvisorPage"));
 const OperationalCostsPage = lazy(() => import("./pages/client/OperationalCostsPage"));
 const AnalyticsPage = lazy(() => import("./pages/client/AnalyticsPage"));
-const SubscriptionPage = lazy(() => import("./pages/client/SubscriptionPage"));
 const ImportPage = lazy(() => import("./pages/client/ImportPage"));
+const MenuEngineeringPage = lazy(() => import("./pages/client/MenuEngineeringPage"));
 
 const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage"));
 const UsersPage = lazy(() => import("./pages/admin/UsersPage"));
 const ReportsPage = lazy(() => import("./pages/admin/ReportsPage"));
-const SubscriptionsPage = lazy(() => import("./pages/admin/SubscriptionsPage"));
 const RecipesAdminPage = lazy(() => import("./pages/admin/RecipesAdminPage"));
 const IngredientsAdminPage = lazy(() => import("./pages/admin/IngredientsAdminPage"));
 const AiUsagePage = lazy(() => import("./pages/admin/AiUsagePage"));
@@ -45,7 +43,6 @@ export default function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/pages" element={<PagesDirectoryPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -56,10 +53,10 @@ export default function App() {
             <Route path="/app" element={<ClientDashboardPage />} />
             <Route path="/app/ingredients" element={<IngredientsPage />} />
             <Route path="/app/recipes" element={<RecipesPage />} />
+            <Route path="/app/menu-engineering" element={<MenuEngineeringPage />} />
             <Route path="/app/operational-costs" element={<OperationalCostsPage />} />
             <Route path="/app/pricing-advisor" element={<PricingAdvisorPage />} />
             <Route path="/app/analytics" element={<AnalyticsPage />} />
-            <Route path="/app/subscription" element={<SubscriptionPage />} />
             <Route path="/app/import" element={<ImportPage />} />
           </Route>
         </Route>
@@ -68,7 +65,6 @@ export default function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
-            <Route path="/admin/subscriptions" element={<SubscriptionsPage />} />
             <Route path="/admin/recipes" element={<RecipesAdminPage />} />
             <Route path="/admin/ingredients" element={<IngredientsAdminPage />} />
             <Route path="/admin/ai-usage" element={<AiUsagePage />} />

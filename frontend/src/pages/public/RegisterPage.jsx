@@ -38,10 +38,55 @@ export default function RegisterPage() {
     online_platforms: []
   });
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const validateField = (name, value) => {
+    let err = "";
+    if (name === "email" && value) {
+      if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
+        err = "Please enter a valid email address";
+      }
+    } else if (name === "password" && value) {
+      if (value.length > 0 && value.length < 6) {
+        err = "Password should be at least 6 characters.";
+      } else if (value.length >= 6 && !/(?=.*[a-zA-Z])(?=.*\d)/.test(value)) {
+        err = "Password is weak (needs letters and numbers).";
+      }
+    } else if (name === "phone_number" && value) {
+      if (value.length > 0 && value.length < 10) {
+        err = "Phone number must be 10 digits.";
+      }
+    }
+    setFieldErrors(prev => ({ ...prev, [name]: err }));
+    return err === "";
+  };
+
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    let updatedForm = { ...form };
+    
+    if (name === "phone_number") {
+      let cleaned = value.replace(/[^\d+]/g, '');
+      if (cleaned.startsWith('+91')) cleaned = cleaned.slice(3);
+      else if (cleaned.startsWith('0')) cleaned = cleaned.slice(1);
+      else if (cleaned.startsWith('91') && cleaned.length >= 12) cleaned = cleaned.slice(2);
+      cleaned = cleaned.replace(/\D/g, '');
+      updatedForm[name] = cleaned.slice(0, 10);
+    } else if (name === "address") {
+      updatedForm[name] = value;
+      const phoneRegex = /(?:(?:\+|00)?91[\s-]*)?(?:0[\s-]*)?([6-9]\d{2}[\s-]*\d{3}[\s-]*\d{4})/;
+      const match = value.match(phoneRegex);
+      if (match && !updatedForm.phone_number) {
+        updatedForm.phone_number = match[1].replace(/\D/g, '');
+        validateField("phone_number", updatedForm.phone_number);
+      }
+    } else {
+      updatedForm[name] = value;
+    }
+
+    setForm(updatedForm);
+    validateField(name, updatedForm[name]);
   };
 
   const handlePlatformToggle = (platform) => {
@@ -61,6 +106,17 @@ export default function RegisterPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (step === 1) {
+      validateField("email", form.email);
+      validateField("password", form.password);
+      if (fieldErrors.email || form.password.length < 6 || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(form.email)) return;
+    }
+    if (step === 2) {
+      validateField("phone_number", form.phone_number);
+      if (form.phone_number.length < 10) return;
+    }
+
     if (step < 3) {
       nextStep();
       return;
@@ -84,7 +140,7 @@ export default function RegisterPage() {
         
         {/* Progress Tracker */}
         <div className="mb-8 flex items-center justify-between relative">
-          <div className="absolute left-0 top-1/2 -z-10 h-1 w-full -translate-y-1/2 bg-slate-100 rounded-full">
+          <div className="absolute left-[20px] top-1/2 -z-10 h-1 w-[calc(100%-40px)] -translate-y-1/2 bg-slate-100 rounded-full">
             <div className="h-full bg-indigo-500 rounded-full transition-all duration-300" style={{ width: `${((step - 1) / 2) * 100}%` }} />
           </div>
           {[
@@ -118,8 +174,8 @@ export default function RegisterPage() {
           {step === 1 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
               <TextInput label="Full name" name="name" value={form.name} onChange={handleChange} required />
-              <TextInput label="Email" type="email" name="email" value={form.email} onChange={handleChange} required />
-              <TextInput label="Password" type="password" name="password" value={form.password} onChange={handleChange} required />
+              <TextInput label="Email" type="email" name="email" value={form.email} onChange={handleChange} error={fieldErrors.email} required />
+              <TextInput label="Password" type="password" name="password" value={form.password} onChange={handleChange} error={fieldErrors.password} required />
             </div>
           )}
 
@@ -142,7 +198,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <TextInput label="Phone Number" name="phone_number" value={form.phone_number} onChange={handleChange} />
+                <TextInput label="Phone Number" name="phone_number" value={form.phone_number} onChange={handleChange} error={fieldErrors.phone_number} required />
                 <TextInput label="GST / Tax ID (Optional)" name="tax_id" value={form.tax_id} onChange={handleChange} />
               </div>
               <TextInput label="Website (Optional)" name="website" value={form.website} onChange={handleChange} />

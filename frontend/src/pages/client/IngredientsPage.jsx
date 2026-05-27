@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { PencilLine, Trash2, Plus, Building2, Package } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { PencilLine, Trash2, Plus, Building2, Package, Search, ChevronDown, Check } from "lucide-react";
 import api from "../../services/api";
 import PageHeader from "../../components/ui/PageHeader";
 import TextInput from "../../components/ui/TextInput";
@@ -8,13 +8,38 @@ import PrimaryButton from "../../components/ui/PrimaryButton";
 import EmptyState from "../../components/ui/EmptyState";
 import { useCurrency } from "../../hooks/useCurrency";
 
-const vendorInitialForm = { vendor_name: "", contact: "" };
-const ingredientInitialForm = { ingredient_name: "", unit: "", vendor_id: "", price_per_unit: "" };
-
-const stagger = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+const UNIT_TYPES = {
+  weight: { label: "Weight based", units: ["kg", "g"] },
+  liquid: { label: "Liquid based", units: ["l", "ml"] }
 };
+
+const PRESETS = [
+  // Dairy
+  { name: "Milk", type: "liquid", unit: "l", category: "Dairy", price: 65 },
+  { name: "Paneer", type: "weight", unit: "kg", category: "Dairy", price: 450 },
+  { name: "Butter", type: "weight", unit: "kg", category: "Dairy", price: 550 },
+  { name: "Cheese", type: "weight", unit: "kg", category: "Dairy", price: 600 },
+  { name: "Cream", type: "liquid", unit: "l", category: "Dairy", price: 280 },
+  // Vegetables
+  { name: "Onion", type: "weight", unit: "kg", category: "Vegetables", price: 40 },
+  { name: "Tomato", type: "weight", unit: "kg", category: "Vegetables", price: 35 },
+  { name: "Potato", type: "weight", unit: "kg", category: "Vegetables", price: 30 },
+  { name: "Capsicum", type: "weight", unit: "kg", category: "Vegetables", price: 80 },
+  { name: "Coriander", type: "weight", unit: "kg", category: "Vegetables", price: 20 },
+  // Spices
+  { name: "Turmeric", type: "weight", unit: "kg", category: "Spices", price: 240 },
+  { name: "Chilli Powder", type: "weight", unit: "kg", category: "Spices", price: 320 },
+  { name: "Garam Masala", type: "weight", unit: "kg", category: "Spices", price: 450 },
+  { name: "Cumin", type: "weight", unit: "kg", category: "Spices", price: 400 },
+  // Proteins
+  { name: "Chicken", type: "weight", unit: "kg", category: "Proteins", price: 260 },
+  { name: "Mutton", type: "weight", unit: "kg", category: "Proteins", price: 750 },
+  { name: "Fish", type: "weight", unit: "kg", category: "Proteins", price: 400 },
+  { name: "Egg", type: "weight", unit: "kg", category: "Proteins", price: 7 } // Assuming per piece is handled as weight/liquid logic? User said only kg/g/l/ml. I will map eggs to weight or handle as kg.
+];
+
+const vendorInitialForm = { vendor_name: "", contact: "" };
+const ingredientInitialForm = { ingredient_name: "", unit: "kg", unit_type: "weight", vendor_id: "", price_per_unit: "" };
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -29,13 +54,20 @@ export default function IngredientsPage() {
   const [ingredientForm, setIngredientForm] = useState(ingredientInitialForm);
   const [editingVendorId, setEditingVendorId] = useState(null);
   const [editingIngredientId, setEditingIngredientId] = useState(null);
+  const [inlineIngredient, setInlineIngredient] = useState(null); // { id, ingredient_name, unit, price_per_unit }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showPresets, setShowPresets] = useState(false);
 
   const vendorLookup = useMemo(
     () => Object.fromEntries((vendors || []).map((vendor) => [vendor.id, vendor.vendor_name])),
     [vendors]
   );
+
+  const filteredPresets = useMemo(() => {
+    if (!ingredientForm.ingredient_name) return PRESETS.slice(0, 5);
+    return PRESETS.filter(p => p.name.toLowerCase().includes(ingredientForm.ingredient_name.toLowerCase())).slice(0, 5);
+  }, [ingredientForm.ingredient_name]);
 
   const loadData = async () => {
     setLoading(true);
@@ -45,13 +77,49 @@ export default function IngredientsPage() {
       setVendors(vendorRes.data?.vendors || (Array.isArray(vendorRes.data) ? vendorRes.data : []));
       setIngredients(ingredientRes.data?.ingredients || (Array.isArray(ingredientRes.data) ? ingredientRes.data : []));
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to load ingredient module");
+      setError(err.response?.data?.message || "Unable to load module");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { loadData(); }, []);
+
+  useEffect(() => {
+    if (!ingredientForm.ingredient_name || ingredientForm.ingredient_name.trim().length < 3) return;
+    if (editingIngredientId) return;
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const response = await api.post("/ai/recommend-unit", {
+          ingredient_name: ingredientForm.ingredient_name
+        });
+        if (response.data?.success) {
+          const { unit_type, suggested_unit } = response.data;
+          setIngredientForm(prev => ({
+            ...prev,
+            unit_type,
+            unit: suggested_unit
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to recommend unit type:", err);
+      }
+    }, 650);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [ingredientForm.ingredient_name, editingIngredientId]);
+
+  const selectPreset = (preset) => {
+    setIngredientForm({
+      ...ingredientForm,
+      ingredient_name: preset.name,
+      unit: preset.unit,
+      unit_type: preset.type,
+      price_per_unit: preset.price
+    });
+    setShowPresets(false);
+  };
 
   const submitVendor = async (event) => {
     event.preventDefault();
@@ -65,7 +133,7 @@ export default function IngredientsPage() {
       setEditingVendorId(null);
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to save vendor");
+      setError("Failed to save vendor");
     }
   };
 
@@ -86,249 +154,312 @@ export default function IngredientsPage() {
       setEditingIngredientId(null);
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to save ingredient");
+      setError("Failed to save ingredient");
     }
-  };
-
-  const editVendor = (vendor) => {
-    setVendorForm({ vendor_name: vendor.vendor_name, contact: vendor.contact || "" });
-    setEditingVendorId(vendor.id);
   };
 
   const editIngredient = (ingredient) => {
-    setIngredientForm({
+    // Set inline editing state instead of filling top form
+    setInlineIngredient({
+      id: ingredient.id,
       ingredient_name: ingredient.ingredient_name,
       unit: ingredient.unit,
-      vendor_id: ingredient.vendor_id || "",
       price_per_unit: ingredient.price_per_unit
     });
-    setEditingIngredientId(ingredient.id);
   };
 
-  const deleteVendor = async (id) => {
+  const saveInlineIngredient = async () => {
+    if (!inlineIngredient) return;
     try {
-      await api.delete(`/vendors/${id}`);
+      const isLiquid = ["l", "ml"].includes(inlineIngredient.unit);
+      await api.put(`/ingredients/${inlineIngredient.id}`, {
+        ingredient_name: inlineIngredient.ingredient_name,
+        unit: inlineIngredient.unit,
+        unit_type: isLiquid ? "liquid" : "weight",
+        price_per_unit: Number(inlineIngredient.price_per_unit || 0)
+      });
+      setInlineIngredient(null);
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete vendor");
+      setError("Failed to update ingredient");
     }
   };
 
-  const deleteIngredient = async (id) => {
-    try {
-      await api.delete(`/ingredients/${id}`);
-      await loadData();
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete ingredient");
-    }
-  };
-
-  if (loading) {
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <div className="h-16 animate-pulse rounded-2xl bg-slate-200/60" />
-        <div className="grid gap-6 xl:grid-cols-2">
-          {[1, 2].map((i) => <div key={i} className="h-64 animate-pulse rounded-3xl bg-slate-200/60" />)}
-        </div>
-      </motion.div>
-    );
-  }
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading modules...</div>;
 
   return (
-    <motion.div key="content" variants={stagger} initial="hidden" animate="show" className="space-y-8">
+    <motion.div initial="hidden" animate="show" className="space-y-8">
       <PageHeader
-        title="Ingredients & Vendors"
-        description="Manage supplier data and per-unit ingredient pricing for precise costing."
+        title="Kitchen Inventory"
+        description="Standardized Indian ingredient management with strict unit controls."
       />
-      <p className="-mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        Price fields displayed in {region.currency}
-      </p>
 
-      {error ? <motion.p variants={fadeUp} className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</motion.p> : null}
-
-      <motion.section variants={fadeUp} className="grid gap-6 xl:grid-cols-2">
-        <form onSubmit={submitVendor} className="glass-card-premium space-y-4 p-6">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 p-2.5 text-white shadow-sm">
-              <Building2 size={18} />
+      <div className="grid gap-6 xl:grid-cols-[1fr_1.4fr]">
+        <div className="space-y-6">
+          {/* Vendor Form */}
+          <form onSubmit={submitVendor} className="glass-card-premium p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="inline-flex rounded-xl bg-slate-900 p-2.5 text-white">
+                <Building2 size={18} />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900">{editingVendorId ? "Edit Vendor" : "Add Vendor"}</h2>
             </div>
-            <h2 className="text-lg font-bold text-slate-900">{editingVendorId ? "Edit Vendor" : "Add Vendor"}</h2>
-          </div>
-          <TextInput
-            label="Vendor name"
-            value={vendorForm.vendor_name}
-            onChange={(event) => setVendorForm((prev) => ({ ...prev, vendor_name: event.target.value }))}
-            required
-          />
-          <TextInput
-            label="Contact"
-            value={vendorForm.contact}
-            onChange={(event) => setVendorForm((prev) => ({ ...prev, contact: event.target.value }))}
-          />
-          <div className="flex gap-3">
-            <PrimaryButton type="submit">{editingVendorId ? "Update Vendor" : "Create Vendor"}</PrimaryButton>
-            {editingVendorId ? (
-              <button
-                type="button"
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                onClick={() => { setEditingVendorId(null); setVendorForm(vendorInitialForm); }}
-              >
-                Cancel
-              </button>
-            ) : null}
-          </div>
-        </form>
-
-        <form onSubmit={submitIngredient} className="glass-card-premium space-y-4 p-6">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 p-2.5 text-white shadow-sm">
-              <Package size={18} />
+            <div className="space-y-4">
+              <TextInput
+                label="Vendor name"
+                value={vendorForm.vendor_name}
+                onChange={(e) => setVendorForm(v => ({ ...v, vendor_name: e.target.value }))}
+                required
+              />
+              <TextInput
+                label="Contact"
+                value={vendorForm.contact}
+                onChange={(e) => setVendorForm(v => ({ ...v, contact: e.target.value }))}
+              />
+              <PrimaryButton type="submit" className="w-full">
+                {editingVendorId ? "Update" : "Save Vendor"}
+              </PrimaryButton>
             </div>
-            <h2 className="text-lg font-bold text-slate-900">{editingIngredientId ? "Edit Ingredient" : "Add Ingredient"}</h2>
-          </div>
-          <TextInput
-            label="Ingredient name"
-            value={ingredientForm.ingredient_name}
-            onChange={(event) => setIngredientForm((prev) => ({ ...prev, ingredient_name: event.target.value }))}
-            required
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput
-              label="Unit (kg/ltr/pcs)"
-              value={ingredientForm.unit}
-              onChange={(event) => setIngredientForm((prev) => ({ ...prev, unit: event.target.value }))}
-              required
-            />
-            <TextInput
-              label="Price per unit"
-              type="number"
-              min="0"
-              step="0.01"
-              value={ingredientForm.price_per_unit}
-              onChange={(event) => setIngredientForm((prev) => ({ ...prev, price_per_unit: event.target.value }))}
-              required
-            />
-          </div>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Vendor</span>
-            <select
-              value={ingredientForm.vendor_id}
-              onChange={(event) => setIngredientForm((prev) => ({ ...prev, vendor_id: event.target.value }))}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
-            >
-              <option value="">No vendor selected</option>
-              {vendors?.map?.((vendor) => (
-                <option key={vendor.id} value={vendor.id}>{vendor.vendor_name}</option>
-              ))}
-            </select>
-          </label>
-          <div className="flex gap-3">
-            <PrimaryButton type="submit">{editingIngredientId ? "Update Ingredient" : "Create Ingredient"}</PrimaryButton>
-            {editingIngredientId ? (
-              <button
-                type="button"
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                onClick={() => { setEditingIngredientId(null); setIngredientForm(ingredientInitialForm); }}
-              >
-                Cancel
-              </button>
-            ) : null}
-          </div>
-        </form>
-      </motion.section>
+          </form>
 
-      <motion.section variants={fadeUp} className="grid gap-6 xl:grid-cols-2">
-        <div className="glass-card-premium overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">
-            <h3 className="font-bold text-slate-900">Vendors</h3>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{vendors?.length || 0}</span>
+          {/* Vendors Table */}
+          <div className="glass-card-premium overflow-hidden">
+             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+               <h3 className="font-bold text-slate-900">Vendors</h3>
+               <span className="text-xs font-bold text-slate-400">{vendors.length}</span>
+             </div>
+             <div className="max-h-[300px] overflow-y-auto">
+               {vendors.map(v => (
+                 <div key={v.id} className="flex items-center justify-between px-6 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+                   <div>
+                     <p className="text-sm font-semibold text-slate-900">{v.vendor_name}</p>
+                     <p className="text-xs text-slate-500">{v.contact || "No contact"}</p>
+                   </div>
+                   <div className="flex gap-2">
+                     <button onClick={() => {setEditingVendorId(v.id); setVendorForm(v);}} className="p-1.5 text-slate-400 hover:text-brand-600"><PencilLine size={14} /></button>
+                     <button onClick={async () => {await api.delete(`/vendors/${v.id}`); loadData();}} className="p-1.5 text-slate-400 hover:text-rose-600"><Trash2 size={14} /></button>
+                   </div>
+                 </div>
+               ))}
+             </div>
           </div>
-          {!vendors || vendors.length === 0 ? (
-            <EmptyState title="No vendors yet" description="Add your first supplier to start building your ingredient catalog." />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-xs uppercase tracking-wide text-slate-500">
-                    <th className="px-6 py-3 font-semibold">Name</th>
-                    <th className="px-6 py-3 font-semibold">Contact</th>
-                    <th className="px-6 py-3 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vendors?.map?.((vendor, i) => (
-                    <motion.tr
-                      key={vendor.id || i}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="border-b border-slate-100/80 transition-colors last:border-0 hover:bg-slate-50/50"
-                    >
-                      <td className="px-6 py-3.5 font-medium text-slate-900">{vendor.vendor_name}</td>
-                      <td className="px-6 py-3.5 text-slate-600">{vendor.contact || "-"}</td>
-                      <td className="px-6 py-3.5">
-                        <div className="flex justify-end gap-2">
-                          <button type="button" onClick={() => editVendor(vendor)} className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"><PencilLine size={14} /></button>
-                          <button type="button" onClick={() => deleteVendor(vendor.id)} className="rounded-lg border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50"><Trash2 size={14} /></button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
 
-        <div className="glass-card-premium overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">
-            <h3 className="font-bold text-slate-900">Ingredients</h3>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{ingredients?.length || 0}</span>
-          </div>
-          {!ingredients || ingredients.length === 0 ? (
-            <EmptyState
-              title="No ingredients yet"
-              description="Create your first ingredient to begin dish-level cost calculations."
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-xs uppercase tracking-wide text-slate-500">
-                    <th className="px-6 py-3 font-semibold">Ingredient</th>
-                    <th className="px-6 py-3 font-semibold">Unit</th>
-                    <th className="px-6 py-3 font-semibold">Price</th>
-                    <th className="px-6 py-3 font-semibold">Vendor</th>
-                    <th className="px-6 py-3 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ingredients?.map?.((ingredient, i) => (
-                    <motion.tr
-                      key={ingredient.id || i}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="border-b border-slate-100/80 transition-colors last:border-0 hover:bg-slate-50/50"
-                    >
-                      <td className="px-6 py-3.5 font-medium text-slate-900">{ingredient.ingredient_name}</td>
-                      <td className="px-6 py-3.5 text-slate-600">{ingredient.unit}</td>
-                      <td className="px-6 py-3.5 font-medium text-slate-900">{formatUsd(ingredient.price_per_unit)}</td>
-                      <td className="px-6 py-3.5 text-slate-600">{vendorLookup[ingredient.vendor_id] || "-"}</td>
-                      <td className="px-6 py-3.5">
-                        <div className="flex justify-end gap-2">
-                          <button type="button" onClick={() => editIngredient(ingredient)} className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"><PencilLine size={14} /></button>
-                          <button type="button" onClick={() => deleteIngredient(ingredient.id)} className="rounded-lg border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50"><Trash2 size={14} /></button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="space-y-6">
+          {/* Ingredient Form */}
+          <form onSubmit={submitIngredient} className="glass-card-premium p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex rounded-xl bg-brand-600 p-2.5 text-white">
+                  <Package size={18} />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900">{editingIngredientId ? "Edit Ingredient" : "New Ingredient"}</h2>
+              </div>
             </div>
-          )}
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="relative">
+                <TextInput
+                  label="Ingredient name"
+                  placeholder="e.g. Basmati Rice"
+                  value={ingredientForm.ingredient_name}
+                  onFocus={() => setShowPresets(true)}
+                  onChange={(e) => setIngredientForm(v => ({ ...v, ingredient_name: e.target.value }))}
+                  required
+                />
+                <AnimatePresence>
+                  {showPresets && filteredPresets.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 5 }}
+                      className="absolute z-20 left-0 right-0 mt-1 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden"
+                    >
+                      <div className="bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Suggestions</div>
+                      {filteredPresets.map(p => (
+                        <button
+                          key={p.name}
+                          type="button"
+                          onClick={() => selectPreset(p)}
+                          className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-brand-50 transition-colors"
+                        >
+                          <span className="font-medium text-slate-900">{p.name}</span>
+                          <span className="text-[10px] font-bold text-brand-600 uppercase bg-brand-50 px-1.5 py-0.5 rounded">{p.category}</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-slate-700">Vendor</span>
+                <select
+                  value={ingredientForm.vendor_id}
+                  onChange={(e) => setIngredientForm(v => ({ ...v, vendor_id: e.target.value }))}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 outline-none transition"
+                >
+                  <option value="">No vendor selected</option>
+                  {vendors.map(v => <option key={v.id} value={v.id}>{v.vendor_name}</option>)}
+                </select>
+              </label>
+
+              <div className="space-y-3">
+                <span className="text-sm font-medium text-slate-700 block">Measurement Type</span>
+                <div className="flex gap-3">
+                  {Object.entries(UNIT_TYPES).map(([id, cfg]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setIngredientForm(v => ({ ...v, unit_type: id, unit: cfg.units[0] }))}
+                      className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${
+                        ingredientForm.unit_type === id
+                          ? "border-brand-600 bg-brand-50 text-brand-700 shadow-sm"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      {cfg.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <span className="text-sm font-medium text-slate-700 block">Standard Unit</span>
+                <div className="flex gap-3">
+                  {UNIT_TYPES[ingredientForm.unit_type].units.map(u => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => setIngredientForm(v => ({ ...v, unit: u }))}
+                      className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${
+                        ingredientForm.unit === u
+                          ? "border-brand-600 bg-brand-600 text-white shadow-md"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      {u}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                 <TextInput
+                   label={`Price per ${ingredientForm.unit}`}
+                   type="number"
+                   step="0.01"
+                   placeholder="0.00"
+                   value={ingredientForm.price_per_unit}
+                   onChange={(e) => setIngredientForm(v => ({ ...v, price_per_unit: e.target.value }))}
+                   required
+                 />
+                 <p className="mt-2 text-xs text-slate-400 italic">
+                   Costing will be calculated in INR.
+                 </p>
+              </div>
+            </div>
+
+            <div className="mt-8 flex gap-3">
+              <PrimaryButton type="submit" className="flex-1">
+                {editingIngredientId ? "Update Ingredient" : "Create Ingredient"}
+              </PrimaryButton>
+              {editingIngredientId && (
+                <button
+                  type="button"
+                  onClick={() => {setEditingIngredientId(null); setIngredientForm(ingredientInitialForm);}}
+                  className="rounded-xl border border-slate-200 px-6 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* Ingredients Table */}
+          <div className="glass-card-premium overflow-hidden">
+             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+               <h3 className="font-bold text-slate-900">Live Inventory</h3>
+               <span className="text-xs font-bold text-slate-400">{ingredients.length} items</span>
+             </div>
+             <div className="overflow-x-auto">
+               <table className="w-full text-sm">
+                 <thead>
+                   <tr className="text-left text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50/30">
+                     <th className="px-6 py-3">Item</th>
+                     <th className="px-6 py-3 text-center">Unit</th>
+                     <th className="px-6 py-3">Price</th>
+                     <th className="px-6 py-3 text-right">Actions</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                    {ingredients.map(ing => (
+                      inlineIngredient?.id === ing.id ? (
+                        // ── Inline edit row ──
+                        <tr key={ing.id} className="border-b border-brand-100 bg-brand-50/40">
+                          <td className="px-4 py-3">
+                            <input
+                              className="w-full rounded-lg border border-brand-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-300"
+                              value={inlineIngredient.ingredient_name}
+                              onChange={e => setInlineIngredient(p => ({ ...p, ingredient_name: e.target.value }))}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <select
+                              className="rounded-lg border border-brand-300 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300"
+                              value={inlineIngredient.unit}
+                              onChange={e => setInlineIngredient(p => ({ ...p, unit: e.target.value }))}
+                            >
+                              {["kg","g","l","ml"].map(u => <option key={u} value={u}>{u}</option>)}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3">
+                            <input
+                              type="number" step="0.01" min="0"
+                              className="w-full rounded-lg border border-brand-300 bg-white px-3 py-2 text-sm font-medium text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-300"
+                              value={inlineIngredient.price_per_unit}
+                              onChange={e => setInlineIngredient(p => ({ ...p, price_per_unit: e.target.value }))}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1">
+                              <button
+                                onClick={saveInlineIngredient}
+                                className="px-3 py-1.5 rounded-lg bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-all"
+                              >Update</button>
+                              <button
+                                onClick={() => setInlineIngredient(null)}
+                                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-all"
+                              >Cancel</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        // ── Normal row ──
+                        <tr key={ing.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-slate-900">{ing.ingredient_name}</td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-600 font-bold text-[10px] uppercase">{ing.unit}</span>
+                          </td>
+                          <td className="px-6 py-4 font-medium text-brand-700">{formatUsd(ing.price_per_unit)}</td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-1">
+                              <button onClick={() => editIngredient(ing)} className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-all"><PencilLine size={14} /></button>
+                              <button onClick={async () => {await api.delete(`/ingredients/${ing.id}`); loadData();}} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"><Trash2 size={14} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    ))}
+                   {ingredients.length === 0 && (
+                     <tr><td colSpan="4" className="px-6 py-12 text-center text-slate-400 italic">Add your first ingredient above.</td></tr>
+                   )}
+                 </tbody>
+               </table>
+             </div>
+          </div>
         </div>
-      </motion.section>
+      </div>
     </motion.div>
   );
 }

@@ -4,14 +4,26 @@ function round2(value) {
   return Number(value.toFixed(2));
 }
 
+function applyPsychologicalPricing(price) {
+  const rounded = Math.round(price);
+  if (rounded < 100) return Math.floor(rounded / 10) * 10 + 9;
+  return Math.floor(rounded / 10) * 10 + 9; // e.g. 249, 299
+}
+
 function buildMockAdvice({ recipeName, finalDishCost, currentPrice }) {
   const safeCurrentPrice = Number(currentPrice || 0);
-  const targetMargin = 0.65;
-  const idealPrice = round2(finalDishCost / (1 - targetMargin));
+  
+  // Target Food Cost ~ 32%
+  const targetFoodCostPct = 0.32;
+  const rawIdealPrice = finalDishCost / targetFoodCostPct;
+  const idealPrice = applyPsychologicalPricing(rawIdealPrice);
+  const aggregatorPrice = applyPsychologicalPricing(idealPrice * 1.20); // 20% higher for Zomato/Swiggy
+  
   const currentMargin = safeCurrentPrice > 0 ? ((safeCurrentPrice - finalDishCost) / safeCurrentPrice) * 100 : 0;
+  const idealMargin = ((idealPrice - finalDishCost) / idealPrice) * 100;
 
   const warnings = [];
-  if (currentMargin < 20) warnings.push("Low margin risk. Current price may not sustain overhead volatility.");
+  if (safeCurrentPrice > 0 && currentMargin < 20) warnings.push("Low margin risk. Current price is unviable for cloud kitchen ops.");
   if (safeCurrentPrice && safeCurrentPrice < finalDishCost)
     warnings.push("Selling below calculated dish cost. Immediate correction recommended.");
 
@@ -20,16 +32,20 @@ function buildMockAdvice({ recipeName, finalDishCost, currentPrice }) {
     recommendation: {
       recipeName,
       idealSellingPrice: idealPrice,
+      aggregatorPrice: aggregatorPrice,
       suggestedRange: {
-        min: round2(idealPrice * 0.95),
-        max: round2(idealPrice * 1.1)
+        min: applyPsychologicalPricing(rawIdealPrice * 0.9),
+        max: applyPsychologicalPricing(rawIdealPrice * 1.15)
       },
-      currentMargin: round2(currentMargin)
+      targetFoodCostPct: targetFoodCostPct * 100,
+      currentMargin: round2(currentMargin),
+      expectedMargin: round2(idealMargin),
+      marketPosition: idealPrice < 150 ? "Budget" : idealPrice > 400 ? "Premium" : "Competitive"
     },
     improvements: [
-      "Bundle with high-margin side items to increase blended margin.",
-      "Re-negotiate high-cost ingredient vendors to reduce raw material volatility.",
-      "Track monthly utility drift and re-run pricing monthly for stability."
+      `Increase price to ₹${idealPrice} for dine-in to hit ${Math.round(idealMargin)}% margin target.`,
+      `List at ₹${aggregatorPrice} on Swiggy/Zomato to absorb commission hits.`,
+      "Bundle with high-margin side items to increase blended margin."
     ],
     warnings
   };
@@ -37,11 +53,20 @@ function buildMockAdvice({ recipeName, finalDishCost, currentPrice }) {
 
 async function callOpenAiPricing({ recipeName, finalDishCost, currentPrice }) {
   const prompt = `
-You are an expert restaurant pricing analyst.
-Return strict JSON only with keys: idealSellingPrice, rangeMin, rangeMax, currentMargin, warnings (array), improvements (array).
+You are an expert restaurant pricing analyst for the Indian market.
+Given:
 Recipe: ${recipeName}
-FinalDishCost: ${finalDishCost}
-CurrentPrice: ${currentPrice || 0}
+Final Per Serving Cost: ₹${finalDishCost}
+Current Price: ₹${currentPrice || 0}
+
+Rules:
+1. Target Food Cost is generally 25-35%. Calculate ideal selling price using: Price = Cost / TargetFoodCost%.
+2. Apply psychological pricing (e.g., ends in 49, 99 - like ₹249, ₹299).
+3. Generate a Zomato/Swiggy aggregator price (usually 15-25% higher than dine-in).
+4. Provide practical, realistic advice for the Indian market. Do not give impossible luxury prices for basic items.
+
+Return strict JSON only with keys: 
+idealSellingPrice (number), aggregatorPrice (number), rangeMin (number), rangeMax (number), currentMargin (number), expectedMargin (number), targetFoodCostPct (number), marketPosition (string), warnings (array), improvements (array).
 `;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -57,7 +82,7 @@ CurrentPrice: ${currentPrice || 0}
       messages: [
         {
           role: "system",
-          content: "You provide conservative, profitability-focused restaurant pricing output in strict JSON."
+          content: "You provide practical, Indian-market viable, profitability-focused restaurant pricing output in strict JSON."
         },
         { role: "user", content: prompt }
       ]
@@ -72,16 +97,22 @@ CurrentPrice: ${currentPrice || 0}
   const content = payload.choices?.[0]?.message?.content;
   const parsed = JSON.parse(content);
 
+  const idealPrice = applyPsychologicalPricing(Number(parsed.idealSellingPrice || finalDishCost * 3));
+
   return {
     source: "openai",
     recommendation: {
       recipeName,
-      idealSellingPrice: round2(Number(parsed.idealSellingPrice || finalDishCost)),
+      idealSellingPrice: idealPrice,
+      aggregatorPrice: applyPsychologicalPricing(Number(parsed.aggregatorPrice || idealPrice * 1.2)),
       suggestedRange: {
-        min: round2(Number(parsed.rangeMin || finalDishCost)),
-        max: round2(Number(parsed.rangeMax || finalDishCost * 1.2))
+        min: applyPsychologicalPricing(Number(parsed.rangeMin || idealPrice * 0.9)),
+        max: applyPsychologicalPricing(Number(parsed.rangeMax || idealPrice * 1.15))
       },
-      currentMargin: round2(Number(parsed.currentMargin || 0))
+      targetFoodCostPct: Number(parsed.targetFoodCostPct || 30),
+      currentMargin: round2(Number(parsed.currentMargin || 0)),
+      expectedMargin: round2(Number(parsed.expectedMargin || 65)),
+      marketPosition: parsed.marketPosition || "Competitive"
     },
     improvements: Array.isArray(parsed.improvements) ? parsed.improvements : [],
     warnings: Array.isArray(parsed.warnings) ? parsed.warnings : []

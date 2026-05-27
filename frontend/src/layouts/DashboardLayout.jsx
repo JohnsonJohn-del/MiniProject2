@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   ChefHat,
@@ -12,30 +12,31 @@ import {
   Wheat,
   Users,
   Bot,
-  X
+  X,
+  LineChart,
+  UserCircle2
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useAi } from "../context/AiContext";
 import Logo from "../components/ui/Logo";
-import CurrencySelector from "../components/ui/CurrencySelector";
 import DemoModeChip from "../components/ui/DemoModeChip";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
+import Toggle from "../components/ui/Toggle";
 
 const clientLinks = [
   { to: "/app", label: "Dashboard", icon: BarChart3 },
+  { to: "/app/menu-engineering", label: "Profitability Studio", icon: LineChart },
   { to: "/app/ingredients", label: "Ingredients", icon: Wheat },
   { to: "/app/recipes", label: "Recipes", icon: ChefHat },
-  { to: "/app/import", label: "Smart Import", icon: FileText },
+  { to: "/app/import", label: "Smart Import", icon: FileText, ai: true },
   { to: "/app/operational-costs", label: "Operational Costs", icon: Wallet },
-  { to: "/app/pricing-advisor", label: "Pricing Advisor", icon: Sparkles },
-  { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/app/subscription", label: "Subscription", icon: CreditCard }
+  { to: "/app/analytics", label: "Analytics", icon: BarChart3 }
 ];
 
 const adminLinks = [
   { to: "/admin", label: "Dashboard", icon: BarChart3 },
   { to: "/admin/users", label: "Users", icon: Users },
-  { to: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
   { to: "/admin/recipes", label: "Recipes", icon: ChefHat },
   { to: "/admin/ingredients", label: "Ingredients", icon: Wheat },
   { to: "/admin/ai-usage", label: "AI Usage", icon: Bot },
@@ -44,9 +45,20 @@ const adminLinks = [
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false);
+  const { aiEnabled, toggleAi } = useAi();
   const { user, logout } = useAuth();
-  const links = user?.role === "admin" ? adminLinks : clientLinks;
+  
+  const links = user?.role === "admin" 
+    ? adminLinks 
+    : clientLinks.filter(l => !l.ai || aiEnabled);
+
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout(); // This is async but we don't need to await it for the UI to redirect
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -103,7 +115,7 @@ export default function DashboardLayout() {
           <div className="border-t border-slate-100 p-3">
             <button
               type="button"
-              onClick={logout}
+              onClick={handleLogout}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600"
             >
               <LogOut size={16} /> Sign out
@@ -126,14 +138,31 @@ export default function DashboardLayout() {
                 <DemoModeChip />
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <CurrencySelector compact />
-              <Link
-                to="/pricing"
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900"
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 rounded-2xl bg-slate-100/80 px-3 py-1.5 backdrop-blur-md">
+                <Bot size={14} className={aiEnabled ? "text-brand-600" : "text-slate-400"} />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">AI Assist</span>
+                <Toggle 
+                  enabled={aiEnabled} 
+                  onChange={toggleAi}
+                  className="scale-75"
+                />
+              </div>
+
+              {/* User identity pill */}
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+                <UserCircle2 size={16} className="text-brand-500" />
+                <span className="hidden max-w-[140px] truncate text-xs font-semibold text-slate-700 sm:block">
+                  {user?.email}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="hidden items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 md:flex"
               >
-                Plans
-              </Link>
+                <LogOut size={13} /> Sign out
+              </button>
             </div>
           </header>
 

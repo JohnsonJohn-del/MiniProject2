@@ -7,7 +7,8 @@ import {
   deleteRecipe,
   getRecipeById,
   listRecipes,
-  updateRecipe
+  updateRecipe,
+  previewRecipeCost
 } from "../controllers/recipeController.js";
 
 const router = Router();
@@ -17,6 +18,7 @@ router.use(asyncHandler(requireAuth));
 router.get("/", asyncHandler(listRecipes));
 router.get("/:id", asyncHandler(getRecipeById));
 router.post("/", asyncHandler(enforceRecipeLimit), asyncHandler(createRecipe));
+router.post("/preview-cost", asyncHandler(previewRecipeCost));
 router.put("/:id", asyncHandler(updateRecipe));
 router.delete("/:id", asyncHandler(deleteRecipe));
 

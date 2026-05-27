@@ -1,19 +1,29 @@
-import { SUBSCRIPTION_PLANS } from "../config/subscriptionPlans.js";
 import { supabaseAdmin } from "../config/supabaseAdmin.js";
 
-export function getPlanConfig(planKey) {
-  return SUBSCRIPTION_PLANS[planKey] || SUBSCRIPTION_PLANS.free;
+// Plan config is now static as everything is free
+export function getPlanConfig() {
+  return {
+    key: "Unlimited",
+    maxRecipes: Infinity,
+    aiRequestsPerDay: Infinity,
+    features: {
+      ai_advisor: true,
+      ocr_import: true,
+      analytics_pro: true,
+      recipe_export: true
+    }
+  };
 }
 
 export async function getUserSubscriptionUsage(userId) {
   const { data, error } = await supabaseAdmin
     .from("users")
-    .select("subscription_plan, recipes_created, ai_requests_used")
+    .select("recipes_created, ai_requests_used")
     .eq("id", userId)
     .single();
 
   if (error || !data) {
-    return { subscription_plan: "free", recipes_created: 0, ai_requests_used: 0 };
+    return { recipes_created: 0, ai_requests_used: 0 };
   }
 
   return data;
@@ -57,22 +67,6 @@ export async function incrementAiUsage(userId) {
         .from("ai_usage_logs")
         .insert({ user_id: userId, request_count: 1, log_date: today });
     }
-  } catch {
-    return;
-  }
-
-  try {
-    const { data: logs } = await supabaseAdmin
-      .from("ai_usage_logs")
-      .select("request_count")
-      .eq("user_id", userId);
-
-    const totalAi = (logs || []).reduce((sum, row) => sum + (Number(row.request_count) || 0), 0);
-
-    await supabaseAdmin
-      .from("users")
-      .update({ ai_requests_used: totalAi })
-      .eq("id", userId);
   } catch {
     return;
   }

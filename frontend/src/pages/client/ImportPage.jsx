@@ -4,6 +4,8 @@ import { FileText, ChefHat, Sparkles, Upload, Loader2, Check, Trash2, TrendingUp
 import api from "../../services/api";
 import PageHeader from "../../components/ui/PageHeader";
 import PrimaryButton from "../../components/ui/PrimaryButton";
+import { useAi } from "../../context/AiContext";
+import { Bot } from "lucide-react";
 
 const fade = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 
@@ -65,6 +67,7 @@ function EditRow({ item, onChange, onRemove, fields }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function ImportPage() {
+  const { aiEnabled } = useAi();
   const [tab, setTab] = useState("bill");
   const [billFile, setBillFile] = useState(null);
   const [billText, setBillText] = useState("");
@@ -172,6 +175,21 @@ export default function ImportPage() {
     { key: "quantity", label: "Qty", type: "number" },
     { key: "unit", label: "Unit" }
   ];
+
+  if (!aiEnabled) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+        <div className="mb-6 rounded-3xl bg-slate-100 p-8 text-slate-300">
+          <Bot size={80} strokeWidth={1} />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900">AI Features Disabled</h2>
+        <p className="mt-2 max-w-md text-slate-500">
+          Enable "AI Assist" in the top bar to unlock Smart Bill OCR, 
+          Recipe Auto-Parsing, and Business Intelligence insights.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <motion.div key="content" variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } }} initial="hidden" animate="show" className="space-y-8">

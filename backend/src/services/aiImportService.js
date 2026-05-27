@@ -84,7 +84,7 @@ export async function parseBillWithAI(ocrText) {
   try {
     const result = await callOpenAIParse(
       `Extract vendor name and line items from this OCR text:\n\n${ocrText}`,
-      `You extract structured bill data from OCR text. Return JSON with keys: vendor_name (string), items (array of {ingredient_name, quantity, unit, price}). All prices in the local currency.`
+      `You extract structured bill data from OCR text. Return JSON with keys: vendor_name (string), items (array of {ingredient_name, quantity, unit, price}). All prices in the local currency. IMPORTANT: Handle Indian numbering formats carefully (e.g. 1,00,000.00). Remove commas before returning numeric values. If an OCR scan has misplaced commas or missing decimals (e.g. 99600 for 996.00), use your judgment based on realistic Indian grocery/hospitality ingredient pricing to correct it. Ensure quantity is numeric.`
     );
     return { source: "openai", ...result };
   } catch {

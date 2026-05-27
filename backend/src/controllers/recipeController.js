@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AppError } from "../utils/appError.js";
 import { getTargetUserId } from "../utils/tenantScope.js";
 import { supabaseAdmin } from "../config/supabaseAdmin.js";
+import { normalizeQuantity } from "../utils/unitConverter.js";
 
 const recipeSchema = z.object({
   recipe_name: z.string().min(2),
@@ -9,7 +10,8 @@ const recipeSchema = z.object({
     .array(
       z.object({
         ingredient_id: z.string().uuid(),
-        quantity: z.coerce.number().positive()
+        quantity: z.coerce.number().positive(),
+        unit: z.string().optional()
       })
     )
     .min(1)
@@ -20,6 +22,18 @@ function calculateIngredientCost(ingredients, itemMap) {
     const quantity = itemMap[row.id];
     return sum + Number(row.price_per_unit) * quantity;
   }, 0);
+}
+
+function getNormalizedItemMap(items, ingredientRows) {
+  try {
+    return items.reduce((acc, item) => {
+      const baseIng = ingredientRows.find(i => i.id === item.ingredient_id);
+      const normalizedQty = baseIng ? normalizeQuantity(item.quantity, item.unit || baseIng.unit, baseIng.unit) : item.quantity;
+      return { ...acc, [item.ingredient_id]: normalizedQty };
+    }, {});
+  } catch (err) {
+    throw new AppError(err.message, 400);
+  }
 }
 
 export async function listRecipes(req, res) {
@@ -94,11 +108,17 @@ export async function getRecipeById(req, res) {
     detailMap[d.id] = d;
   });
 
-  const enrichedItems = (items || []).map((item) => ({
-    ingredient_id: item.ingredient_id,
-    quantity: item.quantity,
-    ...detailMap[item.ingredient_id]
-  }));
+  const enrichedItems = (items || []).map((item) => {
+    const detail = detailMap[item.ingredient_id] || {};
+    return {
+      ingredient_id: item.ingredient_id,
+      quantity: item.quantity,
+      unit: item.unit || detail.unit || "",
+      base_unit: detail.unit || "",
+      ingredient_name: detail.ingredient_name || "",
+      price_per_unit: Number(detail.price_per_unit || 0)
+    };
+  });
 
   res.json({
     success: true,
@@ -120,7 +140,7 @@ export async function createRecipe(req, res) {
 
   let ingQuery = supabaseAdmin
     .from("ingredients")
-    .select("id, user_id, price_per_unit")
+    .select("id, user_id, unit, price_per_unit")
     .in("id", ingredientIds);
 
   if (req.user.role !== "admin") {
@@ -134,7 +154,8 @@ export async function createRecipe(req, res) {
     throw new AppError("One or more ingredients are invalid", 400);
   }
 
-  const itemMap = items.reduce((acc, item) => ({ ...acc, [item.ingredient_id]: item.quantity }), {});
+  const itemMap = getNormalizedItemMap(items, ingredientRows);
+
   const totalCost = calculateIngredientCost(ingredientRows, itemMap);
 
   const { data: recipe, error: recipeError } = await supabaseAdmin
@@ -149,17 +170,22 @@ export async function createRecipe(req, res) {
 
   if (recipeError) throw new AppError("Failed to create recipe", 500);
 
-  const recipeIngredients = items.map((item) => ({
-    recipe_id: recipe.id,
-    ingredient_id: item.ingredient_id,
-    quantity: item.quantity
-  }));
+  const recipeIngredients = items.map((item) => {
+    return {
+      recipe_id: recipe.id,
+      ingredient_id: item.ingredient_id,
+      quantity: itemMap[item.ingredient_id]
+    };
+  });
 
   const { error: riError } = await supabaseAdmin
     .from("recipe_ingredients")
     .insert(recipeIngredients);
 
-  if (riError) throw new AppError("Failed to link ingredients", 500);
+  if (riError) {
+    console.error("Recipe Ingredient Insert Error:", riError);
+    throw new AppError(`Failed to link ingredients: ${riError.message}`, 500);
+  }
 
   const { count, error: countError } = await supabaseAdmin
     .from("recipes")
@@ -200,7 +226,7 @@ export async function updateRecipe(req, res) {
 
   let ingQuery = supabaseAdmin
     .from("ingredients")
-    .select("id, price_per_unit")
+    .select("id, unit, price_per_unit")
     .in("id", ingredientIds);
 
   if (req.user.role !== "admin") {
@@ -213,7 +239,8 @@ export async function updateRecipe(req, res) {
     throw new AppError("One or more ingredients are invalid", 400);
   }
 
-  const itemMap = items.reduce((acc, item) => ({ ...acc, [item.ingredient_id]: item.quantity }), {});
+  const itemMap = getNormalizedItemMap(items, ingredientRows);
+
   const totalCost = calculateIngredientCost(ingredientRows, itemMap);
 
   const { data: recipe, error: updateError } = await supabaseAdmin
@@ -235,11 +262,13 @@ export async function updateRecipe(req, res) {
 
   if (deleteError) throw new AppError("Failed to update recipe ingredients", 500);
 
-  const recipeIngredients = items.map((item) => ({
-    recipe_id: id,
-    ingredient_id: item.ingredient_id,
-    quantity: item.quantity
-  }));
+  const recipeIngredients = items.map((item) => {
+    return {
+      recipe_id: id,
+      ingredient_id: item.ingredient_id,
+      quantity: itemMap[item.ingredient_id]
+    };
+  });
 
   const { error: riError } = await supabaseAdmin
     .from("recipe_ingredients")
@@ -278,4 +307,46 @@ export async function deleteRecipe(req, res) {
     .eq("id", data[0].user_id);
 
   res.json({ success: true, message: "Recipe deleted" });
+}
+
+const previewSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        ingredient_id: z.string().uuid(),
+        quantity: z.coerce.number().positive(),
+        unit: z.string().optional()
+      })
+    )
+    .min(1)
+});
+
+export async function previewRecipeCost(req, res) {
+  const parsed = previewSchema.safeParse(req.body);
+  if (!parsed.success) throw new AppError("Invalid preview payload", 400);
+
+  const { items } = parsed.data;
+  const ingredientIds = items.map((item) => item.ingredient_id);
+
+  let ingQuery = supabaseAdmin
+    .from("ingredients")
+    .select("id, unit, price_per_unit")
+    .in("id", ingredientIds);
+
+  if (req.user.role !== "admin") {
+    ingQuery = ingQuery.eq("user_id", req.user.id);
+  }
+
+  const { data: ingredientRows, error: ingError } = await ingQuery;
+  if (ingError) throw new AppError("Failed to validate ingredients", 500);
+
+  if (!ingredientRows || ingredientRows.length !== ingredientIds.length) {
+    throw new AppError("One or more ingredients are invalid", 400);
+  }
+
+  const itemMap = getNormalizedItemMap(items, ingredientRows);
+
+  const totalCost = calculateIngredientCost(ingredientRows, itemMap);
+
+  res.json({ success: true, food_cost: totalCost });
 }

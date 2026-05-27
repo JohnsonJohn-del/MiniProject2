@@ -186,11 +186,19 @@ export async function getAiInsights(req, res) {
   // 5. Build insight cards
   const insights = [];
 
-  if (lowestMarginItem && lowestMarginItem.margin < 40) {
+  function applyPsychologicalPricing(price) {
+    const rounded = Math.round(price);
+    if (rounded < 100) return Math.floor(rounded / 10) * 10 + 9;
+    return Math.floor(rounded / 10) * 10 + 9; // e.g. 249, 299
+  }
+
+  if (lowestMarginItem && lowestMarginItem.margin < 30) {
+    const targetFoodCostPct = 0.32;
+    const recommendedPrice = applyPsychologicalPricing(lowestMarginItem.cost / targetFoodCostPct);
     insights.push({
       type: "warning",
       title: "Low Margin Alert",
-      message: `${lowestMarginItem.recipe} has only ${lowestMarginItem.margin.toFixed(1)}% margin. Consider raising the price or reducing ingredient cost.`,
+      message: `${lowestMarginItem.recipe} has only ${lowestMarginItem.margin.toFixed(1)}% margin. Consider raising the price from ₹${lowestMarginItem.selling_price} to ₹${recommendedPrice} to maintain profitability.`,
       metric: `${lowestMarginItem.margin.toFixed(1)}%`,
       action: "Review pricing"
     });
@@ -202,7 +210,7 @@ export async function getAiInsights(req, res) {
       insights.push({
         type: "info",
         title: "Ingredient Price Rising",
-        message: `${t.ingredient} has increased by ${t.change_pct}% (from £${t.from_price.toFixed(2)} to £${t.to_price.toFixed(2)}). Review recipes using this ingredient.`,
+        message: `${t.ingredient} has increased by ${t.change_pct}% (from ₹${t.from_price.toFixed(0)} to ₹${t.to_price.toFixed(0)}). Review recipes using this ingredient.`,
         metric: `+${t.change_pct}%`,
         action: "Update recipes"
       });
@@ -213,17 +221,17 @@ export async function getAiInsights(req, res) {
     insights.push({
       type: "warning",
       title: "Operational Cost Spike",
-      message: `Monthly operational costs increased by ${opexChange}% vs last month (£${opexTrend[1].total.toFixed(0)} → £${opexTrend[0].total.toFixed(0)}).`,
+      message: `Monthly operational costs increased by ${opexChange}% vs last month (₹${opexTrend[1].total.toFixed(0)} → ₹${opexTrend[0].total.toFixed(0)}).`,
       metric: `+${opexChange}%`,
       action: "Audit utilities"
     });
   }
 
-  if (highestMarginItem && highestMarginItem.margin > 60) {
+  if (highestMarginItem && highestMarginItem.margin > 65) {
     insights.push({
       type: "success",
       title: "High-Margin Star",
-      message: `${highestMarginItem.recipe} delivers ${highestMarginItem.margin.toFixed(1)}% margin — your most profitable dish. Consider promoting it.`,
+      message: `${highestMarginItem.recipe} delivers ${highestMarginItem.margin.toFixed(1)}% margin — your most profitable dish. Consider promoting it heavily on Zomato/Swiggy.`,
       metric: `${highestMarginItem.margin.toFixed(1)}%`,
       action: "Promote dish"
     });
@@ -233,17 +241,17 @@ export async function getAiInsights(req, res) {
     insights.push({
       type: "info",
       title: "Top Vendor by Spend",
-      message: `${topVendor[0]} accounts for your highest ingredient spend at £${topVendor[1].toFixed(2)}. Consider negotiating bulk discounts.`,
-      metric: `£${topVendor[1].toFixed(2)}`,
+      message: `${topVendor[0]} accounts for your highest ingredient spend at ₹${topVendor[1].toFixed(0)}. Consider negotiating bulk discounts.`,
+      metric: `₹${topVendor[1].toFixed(0)}`,
       action: "Negotiate terms"
     });
   }
 
-  if (parseFloat(avgMargin) > 0 && parseFloat(avgMargin) < 35) {
+  if (parseFloat(avgMargin) > 0 && parseFloat(avgMargin) < 55) {
     insights.push({
       type: "warning",
       title: "Portfolio Margin Below Target",
-      message: `Average menu margin is ${avgMargin}%, below the recommended 35–50% range. Review your overall pricing strategy.`,
+      message: `Average menu margin is ${avgMargin}%, below the recommended 65% standard for Indian cloud kitchens. Review your overall pricing strategy.`,
       metric: `${avgMargin}%`,
       action: "Revise pricing"
     });

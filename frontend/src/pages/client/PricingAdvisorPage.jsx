@@ -7,6 +7,8 @@ import PrimaryButton from "../../components/ui/PrimaryButton";
 import TextInput from "../../components/ui/TextInput";
 import EmptyState from "../../components/ui/EmptyState";
 import { useCurrency } from "../../hooks/useCurrency";
+import { useAi } from "../../context/AiContext";
+import { Bot, ShieldAlert } from "lucide-react";
 
 const stagger = {
   hidden: {},
@@ -20,6 +22,7 @@ const fadeUp = {
 
 export default function PricingAdvisorPage() {
   const { formatUsd } = useCurrency();
+  const { aiEnabled } = useAi();
   const [recipes, setRecipes] = useState([]);
   const [logs, setLogs] = useState([]);
   const [form, setForm] = useState({ recipe_id: "", current_price: "", month: new Date().toISOString().slice(0, 7) });
@@ -54,6 +57,21 @@ export default function PricingAdvisorPage() {
       setLoading(false);
     }
   };
+
+  if (!aiEnabled) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+        <div className="mb-6 rounded-3xl bg-slate-100 p-8 text-slate-300">
+          <Bot size={80} strokeWidth={1} />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900">AI Assistance is Off</h2>
+        <p className="mt-2 max-w-md text-slate-500">
+          Enable "AI Assist" in the top bar to unlock automated pricing recommendations,
+          margin forecasting, and profitability insights.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
@@ -108,31 +126,42 @@ export default function PricingAdvisorPage() {
                 </span>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="mt-5 grid gap-3 sm:grid-cols-4">
                 <div className="rounded-xl border border-slate-200/80 bg-white p-3.5">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Final Dish Cost</p>
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Dish Cost</p>
                   <p className="mt-1 text-xl font-bold text-slate-900">{formatUsd(result.costing.finalDishCost)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200/80 bg-white p-3.5">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Suggested Price</p>
+                  <p className="text-[11px] uppercase tracking-wide text-brand-500 font-semibold">Dine-in Price</p>
                   <p className="mt-1 text-xl font-bold text-brand-600">{formatUsd(result.recommendation.idealSellingPrice)}</p>
                 </div>
+                <div className="rounded-xl border border-rose-200/80 bg-rose-50/50 p-3.5">
+                  <p className="text-[11px] uppercase tracking-wide text-rose-500 font-semibold">Zomato/Swiggy</p>
+                  <p className="mt-1 text-xl font-bold text-rose-600">{formatUsd(result.recommendation.aggregatorPrice)}</p>
+                </div>
                 <div className="rounded-xl border border-slate-200/80 bg-white p-3.5">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Current Margin</p>
-                  <p className={`mt-1 text-xl font-bold ${
-                    Number(result.recommendation.currentMargin) > 50 ? "text-emerald-600" :
-                    Number(result.recommendation.currentMargin) > 30 ? "text-amber-600" : "text-rose-600"
-                  }`}>
-                    {Number(result.recommendation.currentMargin).toFixed(2)}%
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Target Margin</p>
+                  <p className="mt-1 text-xl font-bold text-emerald-600">
+                    {Number(result.recommendation.expectedMargin || 65).toFixed(0)}%
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-600">
-                <TrendingUp size={14} className="text-slate-400" />
-                Recommended range: <span className="font-semibold text-slate-900">{formatUsd(result.recommendation.suggestedRange.min)}</span>
-                <span className="text-slate-300">—</span>
-                <span className="font-semibold text-slate-900">{formatUsd(result.recommendation.suggestedRange.max)}</span>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-600">
+                <div className="flex items-center gap-2">
+                  <TrendingUp size={14} className="text-slate-400" />
+                  Recommended range: <span className="font-semibold text-slate-900">{formatUsd(result.recommendation.suggestedRange.min)}</span>
+                  <span className="text-slate-300">—</span>
+                  <span className="font-semibold text-slate-900">{formatUsd(result.recommendation.suggestedRange.max)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-200 text-xs font-medium text-slate-700">
+                    {result.recommendation.marketPosition || "Competitive"} Market
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-brand-100 text-xs font-medium text-brand-700">
+                    Target Food Cost: {result.recommendation.targetFoodCostPct || 30}%
+                  </span>
+                </div>
               </div>
             </motion.div>
 

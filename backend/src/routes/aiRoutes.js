@@ -2,7 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
 import { enforceAiRequestLimit, requirePlanFeature } from "../middleware/subscriptionMiddleware.js";
-import { getAiPricingAdvice, listMyAiUsageLogs } from "../controllers/aiController.js";
+import { getAiPricingAdvice, listMyAiUsageLogs, recommendUnit } from "../controllers/aiController.js";
 
 const router = Router();
 
@@ -14,6 +14,7 @@ router.post(
   asyncHandler(enforceAiRequestLimit),
   asyncHandler(getAiPricingAdvice)
 );
+router.post("/recommend-unit", asyncHandler(recommendUnit));
 router.get("/usage", asyncHandler(listMyAiUsageLogs));
 
 export default router;

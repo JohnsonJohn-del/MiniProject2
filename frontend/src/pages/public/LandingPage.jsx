@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { useCurrency } from "../../hooks/useCurrency";
+
 
 const reveal = {
   hidden: { opacity: 0, y: 26 },
@@ -52,10 +52,10 @@ const valueProps = [
     gradient: "from-emerald-500 to-teal-500"
   },
   {
-    icon: Flame,
-    title: "Subscription Workflow",
-    copy: "Scale from starter operations to full premium intelligence with built-in usage controls.",
-    gradient: "from-violet-500 to-purple-500"
+    icon: Shield,
+    title: "Enterprise Ready",
+    copy: "Scale operations with multi-location support, robust audit logs, and secure data storage.",
+    gradient: "from-slate-700 to-slate-900"
   }
 ];
 
@@ -67,8 +67,9 @@ const workflow = [
   "Track profitability shifts in analytics"
 ];
 
+const fmt = (n) => "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
+
 export default function LandingPage() {
-  const { formatUsd } = useCurrency();
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
   const cardY = useTransform(scrollYProgress, [0, 1], [55, -40]);
@@ -104,7 +105,7 @@ export default function LandingPage() {
                 , not guesswork.
               </h1>
               <p className="max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
-                Smart Food Costing combines precise operational costing, AI pricing insights, and subscription-powered
+                Smart Food Costing combines precise operational costing, AI pricing insights, and advanced
                 analytics so restaurant teams can protect margin under real market pressure.
               </p>
             </motion.div>
@@ -114,7 +115,7 @@ export default function LandingPage() {
                 to="/register"
                 className="group inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl"
               >
-                Start Free Trial <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                Get Started Now <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
                 to="/pages"
@@ -157,8 +158,9 @@ export default function LandingPage() {
 
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[
-                  { label: "Dish Cost", value: formatUsd(5.42), color: "text-slate-900" },
-                  { label: "Ideal Price", value: formatUsd(15.9), color: "text-slate-900" },
+                  { label: "Dish Cost", value: fmt(150.42), color: "text-slate-900" },
+                  { label: "Ideal Price", value: fmt(249), color: "text-slate-900" },
+
                   { label: "Projected Margin", value: "65.9%", color: "text-emerald-700" }
                 ].map((item) => (
                   <div key={item.label} className="rounded-xl border border-slate-200 bg-white/80 p-3 backdrop-blur-sm">
@@ -311,7 +313,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <Link to="/register" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-slate-800 hover:shadow-lg">
-                Try It Free <ArrowRight size={15} />
+                Get Started <ArrowRight size={15} />
               </Link>
             </div>
           </motion.div>
@@ -353,10 +355,10 @@ export default function LandingPage() {
               <h3 className="mt-3 text-2xl font-bold text-slate-900">Profitability Snapshot</h3>
               <div className="mt-6 space-y-3">
                 {[
-                  ["Butter Chicken", 17, "63.8%", "bg-emerald-500"],
-                  ["Veg Biryani", 11.5, "58.2%", "bg-brand-500"],
-                  ["Mutton Curry", 20, "47.9%", "bg-amber-500"],
-                  ["Paneer Wrap", 8.2, "34.4%", "bg-rose-500"]
+                  ["Butter Chicken", 349, "63.8%", "bg-emerald-500"],
+                  ["Veg Biryani", 289, "58.2%", "bg-brand-500"],
+                  ["Mutton Curry", 499, "47.9%", "bg-amber-500"],
+                  ["Paneer Tikka", 309, "54.4%", "bg-rose-500"]
                 ].map(([dish, price, margin, badgeColor]) => (
                   <motion.div
                     key={dish}
@@ -364,7 +366,7 @@ export default function LandingPage() {
                     className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-slate-200 bg-white/80 px-4 py-3 backdrop-blur-sm transition-all hover:border-slate-300"
                   >
                     <p className="text-sm font-bold text-slate-900">{dish}</p>
-                    <p className="text-sm text-slate-500">{formatUsd(price)}</p>
+                    <p className="text-sm text-slate-500">{fmt(price)}</p>
                     <p className={`rounded-lg ${badgeColor} px-2 py-1 text-xs font-bold text-white`}>{margin}</p>
                   </motion.div>
                 ))}

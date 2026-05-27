@@ -13,7 +13,7 @@ export async function getRecipeCostBreakdown(req, res) {
 
   await supabaseAdmin
     .from("recipes")
-    .update({ total_cost: costData.finalDishCost.toFixed(2), updated_at: new Date().toISOString() })
+    .update({ total_cost: costData.ingredientCost.toFixed(2), updated_at: new Date().toISOString() })
     .eq("id", recipeId);
 
   res.json({

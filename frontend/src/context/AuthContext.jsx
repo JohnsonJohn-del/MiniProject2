@@ -14,8 +14,7 @@ function mapSupabaseUser(sbUser) {
     id: sbUser.id,
     email: sbUser.email,
     name: meta.name || sbUser.email?.split("@")[0] || "User",
-    role: meta.role || "client",
-    subscription_plan: meta.subscription_plan || "free"
+    role: meta.role || "client"
   };
 }
 
@@ -101,8 +100,7 @@ export function AuthProvider({ children }) {
           options: {
             data: {
               name: payload.name,
-              role: "client",
-              subscription_plan: "free"
+              role: "client"
             }
           }
         });
@@ -151,8 +149,7 @@ export function AuthProvider({ children }) {
             options: {
               data: {
                 name: role === "admin" ? "Demo Admin" : "Demo Client",
-                role,
-                subscription_plan: "premium"
+                role
               }
             }
           });
@@ -171,9 +168,17 @@ export function AuthProvider({ children }) {
         return { user: mapSupabaseUser(data.user) };
       },
       async logout() {
-        await supabase.auth.signOut();
+        console.log("Starting logout process...");
         localStorage.removeItem("demo_mode");
-        setUser(null);
+        setUser(null); // Clear state immediately for instant UI response
+        
+        try {
+          // Attempt to sign out from Supabase, but don't let it block the UI
+          await supabase.auth.signOut();
+          console.log("Supabase session cleared.");
+        } catch (error) {
+          console.error("Supabase signOut error (ignoring):", error);
+        }
       },
       isDemo: localStorage.getItem("demo_mode") === "1" || isDemoEmail(user?.email)
     }),

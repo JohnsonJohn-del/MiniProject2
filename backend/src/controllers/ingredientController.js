@@ -86,7 +86,47 @@ export async function updateIngredient(req, res) {
   if (error) throw new AppError("Failed to update ingredient", 500);
   if (!data || data.length === 0) throw new AppError("Ingredient not found", 404);
 
+  // Fire and forget background task to update dependent recipes
+  recalculateRecipesForIngredient(id).catch(err => console.error(err));
+
   res.json({ success: true, ingredient: data[0] });
+}
+
+// Helper: Recalculates total cost for all recipes containing a specific ingredient
+async function recalculateRecipesForIngredient(ingredientId) {
+  try {
+    const { data: recipeIds } = await supabaseAdmin
+      .from("recipe_ingredients")
+      .select("recipe_id")
+      .eq("ingredient_id", ingredientId);
+
+    if (!recipeIds || recipeIds.length === 0) return;
+
+    const uniqueRecipeIds = [...new Set(recipeIds.map(r => r.recipe_id))];
+
+    for (const rid of uniqueRecipeIds) {
+      const { data: recipeItems } = await supabaseAdmin
+        .from("recipe_ingredients")
+        .select("ingredient_id, quantity, ingredients(price_per_unit)")
+        .eq("recipe_id", rid);
+
+      if (!recipeItems) continue;
+
+      let totalCost = 0;
+      recipeItems.forEach(ri => {
+        if (ri.ingredients && ri.ingredients.price_per_unit) {
+          totalCost += Number(ri.quantity) * Number(ri.ingredients.price_per_unit);
+        }
+      });
+
+      await supabaseAdmin
+        .from("recipes")
+        .update({ total_cost: totalCost.toFixed(2) })
+        .eq("id", rid);
+    }
+  } catch (err) {
+    console.error("Recipe recalculation failed:", err);
+  }
 }
 
 export async function deleteIngredient(req, res) {

@@ -5,13 +5,16 @@ import App from "./App";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
 import { CurrencyProvider } from "./context/CurrencyContext";
+import { AiProvider } from "./context/AiContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <CurrencyProvider>
         <AuthProvider>
-          <App />
+          <AiProvider>
+            <App />
+          </AiProvider>
         </AuthProvider>
       </CurrencyProvider>
     </BrowserRouter>
