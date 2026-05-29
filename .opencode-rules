@@ -8,7 +8,7 @@ Always follow these project rules:
 4. **Commit frequently** — after each logical completion point with clear messages.
 5. **Update project_tasks.md continuously** — it is the source of truth for tracking progress.
 
-## Installed Skills (13 total)
+## Installed Skills (16 total)
 
 The following skills are installed in `.agents/skills/` and should be loaded for relevant tasks:
 
@@ -25,6 +25,9 @@ The following skills are installed in `.agents/skills/` and should be loaded for
 - `improve-codebase-architecture` — codebase architecture improvement
 - `find-skills` — skill discovery and search
 - `skill-creator` — create custom project-specific skills
+- `impeccable-brandkit` (`.agents/skills/impeccable/skills/brandkit/`) — Brand identity system, design tokens, visual consistency
+- `design-taste-frontend` (`.agents/skills/taste-skill/skills/taste-skill/`) — Anti-slop frontend design for landing pages, portfolios, redesigns
+- `emil-design-eng` (`.agents/skills/emil-skill/skills/emil-design-eng/`) — Emil Kowalski's design engineering philosophy, UI polish, micro-interactions
 
 ## Core Architecture
 

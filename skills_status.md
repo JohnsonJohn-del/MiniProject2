@@ -19,8 +19,18 @@
 | 13 | find-skills | github.com/vercel-labs/skills | ✅ Installed | Skill discovery and search tool |
 | 14 | skill-creator | github.com/anthropics/skills | ✅ Installed | Create custom project-specific skills |
 | 15 | improve-codebase-architecture | github.com/mattpocock/skills | ✅ Installed | Codebase architecture improvement guidance |
+| 16 | impeccable-brandkit | github.com/pbakaus/impeccable (brandkit) | ✅ Installed | Brand identity system, design tokens, visual consistency |
+| 17 | design-taste-frontend | github.com/Leonxlnx/taste-skill | ✅ Installed | Anti-slop frontend design for landing pages, portfolios, redesigns |
+| 18 | emil-design-eng | github.com/emilkowalski/skill | ✅ Installed | Emil Kowalski's design engineering philosophy, UI polish, micro-interactions |
 
 ## Notes
 
 - api-architect and git-workflow-manager failed to install (timeout / private repo). Use alternative skills for those domains.
-- All 13 successfully installed skills are configured for OpenCode and will load automatically.
+- 16 of 18 skills successfully installed.
+- The 3 new design-focused skills (impeccable, taste-skill, emil-design-eng) enhance UI polish and frontend design capabilities.
+
+## Skill Locations
+
+- `impeccable`: `.agents/skills/impeccable/skills/brandkit/SKILL.md`
+- `design-taste-frontend`: `.agents/skills/taste-skill/skills/taste-skill/SKILL.md`
+- `emil-design-eng`: `.agents/skills/emil-skill/skills/emil-design-eng/SKILL.md`
