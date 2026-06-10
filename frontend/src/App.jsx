@@ -43,7 +43,7 @@ export default function App() {
     <Suspense fallback={<RouteLoader />}>
       <Routes>
         <Route element={<PublicLayout />}>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/pages" element={<PagesDirectoryPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

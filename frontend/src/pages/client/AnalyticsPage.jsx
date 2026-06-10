@@ -29,7 +29,8 @@ export default function AnalyticsPage() {
         const response = await api.get("/analytics/client");
         setData(response.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load analytics");
+        console.warn("Unable to load analytics:", err);
+        setError("Database server is waking up (Render cold start). Connection is slow or timed out.");
       } finally {
         setLoading(false);
       }
@@ -54,7 +55,20 @@ export default function AnalyticsPage() {
     <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
       <PageHeader title="Analytics" description="Track profitability distribution, ingredient cost impact, and margin movement by dish." />
 
-      {error ? <motion.p variants={fadeUp} className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</motion.p> : null}
+      {error ? (
+        <motion.div
+          variants={fadeUp}
+          className="rounded-2xl border border-amber-100 bg-amber-50/50 backdrop-blur-md px-5 py-4 text-sm text-amber-900 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-xl mt-0.5">⚠️</span>
+            <div>
+              <p className="font-bold text-amber-950">Connection Notice</p>
+              <p className="text-xs text-amber-800/90 mt-0.5">{error}</p>
+            </div>
+          </div>
+        </motion.div>
+      ) : null}
 
       {loading ? (
         <section className="grid gap-6 xl:grid-cols-2">
@@ -74,17 +88,24 @@ export default function AnalyticsPage() {
                 <h3 className="font-bold text-slate-900">Dish Margin Distribution</h3>
               </div>
               <div className="mt-5 h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={profitabilityData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }} />
-                    <Bar dataKey="margin" radius={[8, 8, 0, 0]}>
-                      {profitabilityData.map((_, index) => (<Cell key={index} fill={colors[index % colors.length]} />))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                {profitabilityData.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-slate-500">
+                    <AlertCircle size={24} className="text-slate-300" />
+                    <p>No dish margins available yet. Add recipes and menu items to track.</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={profitabilityData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }} />
+                      <Bar dataKey="margin" radius={[8, 8, 0, 0]}>
+                        {profitabilityData.map((_, index) => (<Cell key={index} fill={colors[index % colors.length]} />))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
 

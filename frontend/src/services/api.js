@@ -1,9 +1,21 @@
 import axios from "axios";
 import { supabase } from "./supabase";
 
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  // Auto-detect production deployed backend on HTTPS pages to avoid browser Mixed Content blocks
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    // Determine the production backend hostname dynamically or use the standard default
+    return "https://mini-project2-backend.onrender.com/api";
+  }
+  return "http://localhost:5000/api";
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
-  timeout: 15000,
+  baseURL: getBaseURL(),
+  timeout: 60000,
   headers: { "Content-Type": "application/json" }
 });
 

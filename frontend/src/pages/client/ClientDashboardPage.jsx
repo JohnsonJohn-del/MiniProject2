@@ -35,7 +35,8 @@ export default function ClientDashboardPage() {
         const response = await api.get("/analytics/client");
         setData(response.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load dashboard metrics");
+        console.warn("Unable to load dashboard metrics:", err);
+        setError("Database server is waking up (Render cold start). Connection is slow or timed out.");
       } finally {
         setLoading(false);
       }
@@ -46,9 +47,18 @@ export default function ClientDashboardPage() {
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
       {error ? (
-        <motion.p variants={fadeUp} className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600">
-          {error}
-        </motion.p>
+        <motion.div
+          variants={fadeUp}
+          className="rounded-2xl border border-amber-100 bg-amber-50/50 backdrop-blur-md px-5 py-4 text-sm text-amber-900 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-xl mt-0.5">⚠️</span>
+            <div>
+              <p className="font-bold text-amber-950">Connection Notice</p>
+              <p className="text-xs text-amber-800/90 mt-0.5">{error}</p>
+            </div>
+          </div>
+        </motion.div>
       ) : null}
 
       <motion.section variants={fadeUp} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
