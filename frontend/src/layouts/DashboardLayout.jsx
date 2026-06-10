@@ -31,7 +31,8 @@ const clientLinks = [
   { to: "/app/recipes", label: "Recipes", icon: ChefHat },
   { to: "/app/import", label: "Smart Import", icon: FileText, ai: true },
   { to: "/app/operational-costs", label: "Operational Costs", icon: Wallet },
-  { to: "/app/analytics", label: "Analytics", icon: BarChart3 }
+  { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/app/profile", label: "Profile Settings", icon: UserCircle2 }
 ];
 
 const adminLinks = [

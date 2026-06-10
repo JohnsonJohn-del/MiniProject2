@@ -25,29 +25,93 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      if (session?.user) {
-        setUser(mapSupabaseUser(session.user));
-        localStorage.setItem("demo_mode", isDemoEmail(session.user.email) ? "1" : "0");
-      } else {
-        setUser(null);
-        localStorage.removeItem("demo_mode");
+    const fetchUserAndProfile = async (sessionUser) => {
+      console.log("[Auth] fetchUserAndProfile started for:", sessionUser?.id);
+      if (!sessionUser) return null;
+      const baseUser = mapSupabaseUser(sessionUser);
+      try {
+        console.log("[Auth] Querying restaurant_profiles...");
+        const { data: profile } = await Promise.race([
+          supabase
+            .from("restaurant_profiles")
+            .select("*")
+            .eq("user_id", sessionUser.id)
+            .maybeSingle(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Supabase query timeout after 5s")), 5000))
+        ]);
+        console.log("[Auth] restaurant_profiles query resolved:", !!profile);
+        if (profile) {
+          let packaging_cost = 15;
+          let clean_platforms = [];
+          if (Array.isArray(profile.online_platforms)) {
+            profile.online_platforms.forEach(p => {
+              if (p && typeof p === "string" && p.startsWith("__pkg_cost:")) {
+                packaging_cost = Number(p.split(":")[1]) || 15;
+              } else if (p) {
+                clean_platforms.push(p);
+              }
+            });
+          }
+          return {
+            ...baseUser,
+            ...profile,
+            id: baseUser.id,
+            profile_id: profile.id,
+            online_platforms: clean_platforms,
+            packaging_cost
+          };
+        }
+      } catch (err) {
+        console.error("[Auth] Error fetching user profile:", err);
       }
-      setLoading(false);
+      return baseUser;
+    };
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+      try {
+        if (session?.user) {
+          const fullUser = await fetchUserAndProfile(session.user);
+          setUser(fullUser);
+          localStorage.setItem("demo_mode", isDemoEmail(session.user.email) ? "1" : "0");
+        } else {
+          setUser(null);
+          localStorage.removeItem("demo_mode");
+        }
+      } catch (err) {
+        console.error("Error in onAuthStateChange:", err);
+      } finally {
+        setLoading(false);
+      }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      if (session?.user) {
-        setUser(mapSupabaseUser(session.user));
-        localStorage.setItem("demo_mode", isDemoEmail(session.user.email) ? "1" : "0");
-      } else {
-        setUser(null);
-        localStorage.removeItem("demo_mode");
+    const initAuth = async () => {
+      console.log("[Auth] initAuth started");
+      try {
+        console.log("[Auth] Calling getSession...");
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("[Auth] getSession resolved, session exists:", !!session);
+        if (session?.user && mounted) {
+          console.log("[Auth] Fetching user and profile...");
+          const fullUser = await fetchUserAndProfile(session.user);
+          console.log("[Auth] fetchUserAndProfile complete:", fullUser?.email);
+          setUser(fullUser);
+          localStorage.setItem("demo_mode", isDemoEmail(session.user.email) ? "1" : "0");
+        } else if (mounted) {
+          console.log("[Auth] No session found");
+          setUser(null);
+          localStorage.removeItem("demo_mode");
+        }
+      } catch (err) {
+        console.error("[Auth] Failed to initialize session:", err);
+      } finally {
+        if (mounted) {
+          console.log("[Auth] Setting loading to false");
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
+    initAuth();
 
     return () => {
       mounted = false;
@@ -59,6 +123,42 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       loading,
+      async refreshProfile() {
+        if (!user) return;
+        try {
+          const { data: profile } = await Promise.race([
+            supabase
+              .from("restaurant_profiles")
+              .select("*")
+              .eq("user_id", user.id)
+              .maybeSingle(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Supabase query timeout after 5s")), 5000))
+          ]);
+          if (profile) {
+            let packaging_cost = 15;
+            let clean_platforms = [];
+            if (Array.isArray(profile.online_platforms)) {
+              profile.online_platforms.forEach(p => {
+                if (p && typeof p === "string" && p.startsWith("__pkg_cost:")) {
+                  packaging_cost = Number(p.split(":")[1]) || 15;
+                } else if (p) {
+                  clean_platforms.push(p);
+                }
+              });
+            }
+            setUser(prev => ({
+              ...prev,
+              ...profile,
+              id: prev.id,
+              profile_id: profile.id,
+              online_platforms: clean_platforms,
+              packaging_cost
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to refresh profile:", err);
+        }
+      },
       async login(payload) {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: payload.email,

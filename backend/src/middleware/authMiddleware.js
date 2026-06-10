@@ -19,6 +19,7 @@ async function createUserFromSupabase(supabaseUser) {
   const { data, error } = await supabaseAdmin
     .from("users")
     .insert({
+      id: supabaseUser.id,
       name: meta.name || supabaseUser.email?.split("@")[0] || "User",
       email: supabaseUser.email,
       password_hash: "supabase-auth",

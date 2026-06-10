@@ -74,8 +74,21 @@ export async function calculateRecipeCost({ recipeId, user, month }) {
   // Assume standard 5000 dishes/month volume for realistic per-serving allocation if not specified
   const assumedMonthlyVolume = 5000;
   
-  // Per-serving breakdown
-  const packagingCost = 15;
+  let packagingCost = 15;
+  const { data: profile } = await supabaseAdmin
+    .from("restaurant_profiles")
+    .select("online_platforms")
+    .eq("user_id", recipe.user_id)
+    .maybeSingle();
+
+  if (profile && Array.isArray(profile.online_platforms)) {
+    profile.online_platforms.forEach(p => {
+      if (p && typeof p === "string" && p.startsWith("__pkg_cost:")) {
+        packagingCost = Number(p.split(":")[1]) || 15;
+      }
+    });
+  }
+
   const operationalAllocation = (totalMonthlyOpex / assumedMonthlyVolume) || (ingredientCost * 0.15); // Fallback to 15% if no opex recorded
   const salaryAllocation = (totalMonthlySalary / assumedMonthlyVolume) || (ingredientCost * 0.10); // Fallback to 10% if no salary recorded
 

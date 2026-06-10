@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Calculator, PencilLine, PiggyBank, Trash2, Zap, Coins, Info, Sparkles, TrendingUp } from "lucide-react";
+import { Calculator, PencilLine, PiggyBank, Trash2, Zap, Coins, Info, Sparkles, TrendingUp, Save } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +26,7 @@ const fadeUp = {
 
 export default function OperationalCostsPage() {
   const { formatUsd, region } = useCurrency();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [expenseForm, setExpenseForm] = useState({ ...initialExpense, month: getCurrentMonth() });
   const [menuForm, setMenuForm] = useState(menuInitial);
@@ -40,6 +40,47 @@ export default function OperationalCostsPage() {
   const [assumedServings, setAssumedServings] = useState(5000);
   const [platformSettings, setPlatformSettings] = useState({});
   const [showOverheadModal, setShowOverheadModal] = useState(false);
+  const [packagingCostInput, setPackagingCostInput] = useState(15);
+
+  useEffect(() => {
+    if (user?.packaging_cost !== undefined && user?.packaging_cost !== null) {
+      setPackagingCostInput(Number(user.packaging_cost));
+    }
+  }, [user?.packaging_cost]);
+
+  const savePackagingCostToProfile = async () => {
+    try {
+      const { data } = await api.get("/profile");
+      if (data && data.profile) {
+        const p = data.profile;
+        let clean_platforms = [];
+        if (Array.isArray(p.online_platforms)) {
+          p.online_platforms.forEach(plat => {
+            if (plat && typeof plat === "string" && !plat.startsWith("__pkg_cost:")) {
+              clean_platforms.push(plat);
+            }
+          });
+        }
+        
+        const pkgCostNum = parseFloat(packagingCostInput);
+        if (!isNaN(pkgCostNum)) {
+          clean_platforms.push(`__pkg_cost:${pkgCostNum.toFixed(2)}`);
+        }
+
+        await api.put("/profile", {
+          ...p,
+          online_platforms: clean_platforms
+        });
+        
+        if (refreshProfile) {
+          await refreshProfile();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to save packaging cost to profile:", err);
+      setError("Failed to save packaging cost default.");
+    }
+  };
 
   const recipeLookup = useMemo(() => Object.fromEntries((recipes || []).map((item) => [item.id, item.recipe_name])), [recipes]);
 
@@ -276,7 +317,7 @@ export default function OperationalCostsPage() {
     ? (totalMonthlySalary / servings)
     : ((costingPreview?.ingredientCost || 0) * 0.10);
 
-  const packagingCost = costingPreview?.packagingCost || 15;
+  const packagingCost = Number(packagingCostInput || 0);
 
   const finalDishCost = (costingPreview?.ingredientCost || 0) + packagingCost + operationalAllocation + salaryAllocation;
 
@@ -430,9 +471,31 @@ export default function OperationalCostsPage() {
                   <span className="text-slate-600">Ingredient Cost</span>
                   <span className="font-semibold text-slate-900">{formatUsd(costingPreview.ingredientCost || 0)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm items-center">
                   <span className="text-slate-600">Packaging Cost</span>
-                  <span className="font-semibold text-slate-900">{formatUsd(packagingCost)}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="relative rounded-lg border border-slate-200 bg-white px-2 py-1 flex items-center gap-1 w-24">
+                      <span className="text-xs text-slate-400">₹</span>
+                      <input
+                        id="simulator_packaging_cost"
+                        name="simulator_packaging_cost"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={packagingCostInput}
+                        onChange={(e) => setPackagingCostInput(Math.max(0, Number(e.target.value) || 0))}
+                        className="w-full bg-transparent text-right text-xs font-bold outline-none text-slate-900 focus:ring-1 focus:ring-brand-200"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={savePackagingCostToProfile}
+                      className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition"
+                      title="Save as workspace default"
+                    >
+                      <Save size={14} />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex justify-between text-sm items-center">
                   <span className="text-slate-600">Operational Overhead</span>
