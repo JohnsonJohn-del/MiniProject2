@@ -70,7 +70,8 @@ export async function getAdminOverview(req, res) {
       ingredients,
       menu_items,
       operational_expenses,
-      ai_logs
+      ai_logs,
+      plan_counts: planCounts
     }
   });
 }
@@ -180,12 +181,28 @@ export async function listEntityRecords(req, res) {
 
   if (!allowList.includes(entity)) throw new AppError("Unsupported entity", 400);
 
+  let selectStr = "*, users(name, email)";
+  if (entity === "menu_items") {
+    selectStr = "*, users(name, email), recipes(recipe_name)";
+  }
+
   const { data, error } = await supabaseAdmin
     .from(entity)
-    .select("*")
+    .select(selectStr)
     .order("created_at", { ascending: false })
     .limit(200);
 
-  if (error) throw new AppError(`Failed to fetch ${entity}`, 500);
-  res.json({ success: true, records: data });
+  if (error) {
+    console.error(`Failed to fetch ${entity}:`, error);
+    throw new AppError(`Failed to fetch ${entity}`, 500);
+  }
+
+  const mapped = (data || []).map(r => ({
+    ...r,
+    owner_name: r.users?.name || "Unknown",
+    owner_email: r.users?.email || "Unknown",
+    recipe_name: r.recipes?.recipe_name || r.recipe_name || "Unknown"
+  }));
+
+  res.json({ success: true, records: mapped });
 }

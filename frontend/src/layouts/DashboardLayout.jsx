@@ -14,7 +14,8 @@ import {
   Bot,
   X,
   LineChart,
-  UserCircle2
+  UserCircle2,
+  Layers
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -40,6 +41,8 @@ const adminLinks = [
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/recipes", label: "Recipes", icon: ChefHat },
   { to: "/admin/ingredients", label: "Ingredients", icon: Wheat },
+  { to: "/admin/menu-items", label: "Menu Items", icon: Layers },
+  { to: "/admin/operational-costs", label: "Operational Costs", icon: Wallet },
   { to: "/admin/ai-usage", label: "AI Usage", icon: Bot },
   { to: "/admin/reports", label: "Reports", icon: Sparkles }
 ];

@@ -25,6 +25,8 @@ const UsersPage = lazy(() => import("./pages/admin/UsersPage"));
 const ReportsPage = lazy(() => import("./pages/admin/ReportsPage"));
 const RecipesAdminPage = lazy(() => import("./pages/admin/RecipesAdminPage"));
 const IngredientsAdminPage = lazy(() => import("./pages/admin/IngredientsAdminPage"));
+const MenuItemsAdminPage = lazy(() => import("./pages/admin/MenuItemsAdminPage"));
+const OperationalExpensesAdminPage = lazy(() => import("./pages/admin/OperationalExpensesAdminPage"));
 const AiUsagePage = lazy(() => import("./pages/admin/AiUsagePage"));
 
 function RouteLoader() {
@@ -69,6 +71,8 @@ export default function App() {
             <Route path="/admin/users" element={<UsersPage />} />
             <Route path="/admin/recipes" element={<RecipesAdminPage />} />
             <Route path="/admin/ingredients" element={<IngredientsAdminPage />} />
+            <Route path="/admin/menu-items" element={<MenuItemsAdminPage />} />
+            <Route path="/admin/operational-costs" element={<OperationalExpensesAdminPage />} />
             <Route path="/admin/ai-usage" element={<AiUsagePage />} />
             <Route path="/admin/reports" element={<ReportsPage />} />
           </Route>
