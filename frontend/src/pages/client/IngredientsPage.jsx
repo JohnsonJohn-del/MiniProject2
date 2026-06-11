@@ -96,10 +96,11 @@ export default function IngredientsPage() {
         });
         if (response.data?.success) {
           const { unit_type, suggested_unit } = response.data;
+          const mappedUnitType = unit_type === "volume" ? "liquid" : (unit_type || "weight");
           setIngredientForm(prev => ({
             ...prev,
-            unit_type,
-            unit: suggested_unit
+            unit_type: mappedUnitType,
+            unit: suggested_unit || (mappedUnitType === "liquid" ? "l" : "kg")
           }));
         }
       } catch (err) {
@@ -327,7 +328,7 @@ export default function IngredientsPage() {
               <div className="space-y-3">
                 <span className="text-sm font-medium text-slate-700 block">Standard Unit</span>
                 <div className="flex gap-3">
-                  {UNIT_TYPES[ingredientForm.unit_type].units.map(u => (
+                  {(UNIT_TYPES[ingredientForm.unit_type] || UNIT_TYPES.weight).units.map(u => (
                     <button
                       key={u}
                       type="button"

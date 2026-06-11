@@ -95,7 +95,7 @@ function getHeuristicUnitRecommendation(ingredientName) {
 
   for (const keyword of liquidKeywords) {
     if (name.includes(keyword)) {
-      return { unit_type: "volume", suggested_unit: "l" };
+      return { unit_type: "liquid", suggested_unit: "l" };
     }
   }
 
@@ -152,8 +152,8 @@ Return strict JSON only with keys:
     const content = payload.choices?.[0]?.message?.content;
     const parsed = JSON.parse(content);
 
-    const unit_type = parsed.unit_type === "volume" ? "volume" : "weight";
-    const suggested_unit = unit_type === "volume" ? "l" : "kg";
+    const unit_type = parsed.unit_type === "volume" || parsed.unit_type === "liquid" ? "liquid" : "weight";
+    const suggested_unit = unit_type === "liquid" ? "l" : "kg";
 
     return { unit_type, suggested_unit };
   } catch (err) {
